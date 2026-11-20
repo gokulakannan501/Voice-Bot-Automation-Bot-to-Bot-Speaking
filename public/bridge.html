@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Bot-to-Bot QA Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-canvas: #090d16;
+            --bg-panel: #111827;
+            --bg-card: #182234;
+            --bg-card-hover: #1f2d45;
+            --bg-input: #0d131f;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 255, 255, 0.16);
+            --border-focus: #6366f1;
+
+            --text-heading: #ffffff;
+            --text-body: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-faint: #64748b;
+
+            --primary: #4f46e5;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            --accent-purple: #8b5cf6;
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-body);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 13px;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 24px;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 15px;
+            box-shadow: 0 0 14px rgba(79, 70, 229, 0.4);
+        }
+
+        .brand-text h1 {
+            font-size: 14.5px;
+            font-weight: 800;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.2px;
+        }
+
+        .badge-pro {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--accent-indigo);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+        }
+
+        .brand-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .header-metrics {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--text-faint);
+        }
+        .pulse-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+            animation: pulse-ring 1.5s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        .mini-eq {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 10px;
+        }
+        .mini-eq span {
+            width: 2px;
+            background: var(--accent-cyan);
+            border-radius: 1px;
+            height: 3px;
+        }
+        .mini-eq.animating span:nth-child(1) { animation: eq1 0.6s infinite ease-in-out; }
+        .mini-eq.animating span:nth-child(2) { animation: eq2 0.8s infinite ease-in-out; }
+        .mini-eq.animating span:nth-child(3) { animation: eq3 0.5s infinite ease-in-out; }
+        @keyframes eq1 { 0%, 100% { height: 2px; } 50% { height: 10px; } }
+        @keyframes eq2 { 0%, 100% { height: 3px; } 50% { height: 8px; } }
+        @keyframes eq3 { 0%, 100% { height: 2px; } 50% { height: 9px; } }
+
+        /* MAIN APP WRAPPER */
+        main {
+            display: grid;
+            grid-template-columns: 410px 1fr;
+            gap: 16px;
+            padding: 16px 20px;
+            flex: 1;
+            height: calc(100vh - 58px);
+            max-width: 1720px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* CARDS */
+        .card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        /* SEGMENTED CONTROL / TABS */
+        .segmented-tabs {
+            display: flex;
+            background: var(--bg-input);
+            padding: 3px;
+            border-radius: 8px;
+            gap: 3px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 7px 10px;
+            font-size: 11.5px;
+            font-weight: 600;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+        }
+
+        /* FORM CONTROLS */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 100%;
+        }
+
+        label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 11px;
+            color: var(--text-faint);
+            font-size: 12px;
+            pointer-events: none;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-heading);
+            padding: 8px 10px 8px 32px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 13px;
+            cursor: pointer;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-indigo);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        /* PILL SELECTOR FOR QUICK OPTIONS */
+        .pill-group {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .pill-option {
+            flex: 1;
+            padding: 6px 4px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+        .pill-option:hover {
+            border-color: var(--border-hover);
+            color: var(--text-body);
+        }
+        .pill-option.active {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-indigo);
+            color: #ffffff;
+        }
+
+        /* ACTION BUTTONS */
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            margin-top: 2px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        .btn-start:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: #ffffff;
+            padding: 10px 16px;
+            font-size: 12.5px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+            min-width: 95px;
+        }
+        .btn-stop:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+        .btn-secondary:hover {
+            color: var(--text-heading);
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        /* LOG TERMINAL */
+        .terminal-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-height: 150px;
+        }
+
+        .log-terminal {
+            background-color: #070a11;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            flex: 1;
+            overflow-y: auto;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+        .log-line { margin-bottom: 2px; word-break: break-all; }
+        .log-info { color: #60a5fa; }
+        .log-success { color: #34d399; }
+        .log-warn { color: #fbbf24; }
+        .log-error { color: #f87171; }
+
+        /* RIGHT PANEL: CHAT FEED */
+        .feed-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .chat-scroll {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 10px 12px 16px 4px;
+        }
+
+        /* CHAT BUBBLES WITH AVATARS */
+        .message-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.caredesk {
+            justify-content: flex-start;
+        }
+
+        .message-row.patient {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .avatar-caredesk {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+        }
+        .avatar-patient {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+        }
+
+        .bubble-content {
+            display: flex;
+            flex-direction: column;
+            max-width: 76%;
+            min-width: 180px;
+        }
+
+        .message-row.patient .bubble-content {
+            align-items: flex-end;
+        }
+
+        .bubble-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+            padding: 0 2px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .sender-name {
+            color: var(--text-muted);
+        }
+        .message-row.caredesk .sender-name {
+            color: #7dd3fc;
+        }
+        .message-row.patient .sender-name {
+            color: #c4b5fd;
+        }
+
+        .turn-chip {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--border);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 9.5px;
+            font-weight: 500;
+            color: var(--text-faint);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: var(--text-faint);
+            font-family: 'Fira Code', monospace;
+        }
+
+        .bubble-box {
+            padding: 11px 15px;
+            border-radius: 14px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: #f1f5f9;
+            word-break: break-word;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .message-row.caredesk .bubble-box {
+            background: #1e293b;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-top-left-radius: 2px;
+        }
+
+        .message-row.patient .bubble-box {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            border: 1px solid rgba(165, 180, 252, 0.35);
+            border-top-right-radius: 2px;
+            box-shadow: 0 3px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        /* EMPTY PLACEHOLDER */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-faint);
+            gap: 12px;
+            text-align: center;
+            padding: 20px;
+        }
+        .empty-state i {
+            font-size: 44px;
+            opacity: 0.35;
+            color: var(--accent-indigo);
+        }
+        .empty-state h3 {
+            font-size: 14.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+        .empty-state p {
+            font-size: 12px;
+            max-width: 360px;
+            line-height: 1.5;
+        }
+
+        /* SLEEK BOTTOM DOCKED AUDIO PLAYER */
+        .docked-audio-bar {
+            background: #0b111e;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .audio-play-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--success);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+        .audio-play-btn:hover {
+            transform: scale(1.05);
+            background: #059669;
+        }
+
+        .audio-track-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .audio-track-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .track-title {
+            color: var(--success);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .track-timer {
+            font-family: 'Fira Code', monospace;
+            color: var(--text-muted);
+            font-size: 11px;
+        }
+
+        .audio-scrubber-wrap {
+            position: relative;
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .audio-scrubber-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            border-radius: 3px;
+            width: 0%;
+            position: relative;
+            transition: width 0.1s linear;
+        }
+
+        .btn-download-pill {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: var(--success);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .btn-download-pill:hover {
+            background: var(--success);
+            color: #ffffff;
+        }
+
+        .btn-close-audio {
+            background: transparent;
+            border: none;
+            color: var(--text-faint);
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .btn-close-audio:hover {
+            color: var(--text-muted);
+        }
+
+        /* CUSTOM SCROLLBARS */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAV -->
+    <header>
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="brand-text">
+                <h1>Voice Bot QA Studio <span class="badge-pro">PRO TELEPHONY</span></h1>
+                <p>Autonomous WebSocket Bot-to-Bot Orchestration & Red-Teaming</p>
+            </div>
+        </div>
+
+        <div class="header-metrics">
+            <div class="header-pill">
+                <span id="sessionDot" class="pulse-dot"></span>
+                <span id="sessionStatusText" style="font-weight: 700;">IDLE</span>
+                <div id="miniEq" class="mini-eq">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+
+            <div class="header-pill">
+                <i class="fa-regular fa-clock" style="color: var(--accent-indigo);"></i>
+                <span id="metricDuration" style="font-family: 'Fira Code', monospace;">00:00</span>
+            </div>
+
+            <div class="header-pill">
+                <i class="fa-solid fa-comments" style="color: var(--accent-cyan);"></i>
+                <span id="metricTurns" style="font-family: 'Fira Code', monospace;">0 turns</span>
+            </div>
+
+            <button id="lastRecToggleBtn" class="btn-secondary" style="display: none; padding: 5px 12px; color: var(--success); border-color: rgba(16,185,129,0.35);" onclick="toggleRecordingBar()">
+                <i class="fa-solid fa-headphones"></i> Listen Recording
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN STUDIO -->
+    <main>
+        <!-- LEFT PANEL: CONTROLS & LOGS -->
+        <div style="display: flex; flex-direction: column; gap: 14px; overflow: hidden;">
+            <div class="card" style="flex-shrink: 0;">
+                <div class="segmented-tabs">
+                    <button id="tabCareDesk" class="tab-btn active" onclick="switchMode('caredesk')">
+                        <i class="fa-solid fa-hospital-user"></i> CareDesk Direct Voice
+                    </button>
+                    <button id="tabBridge" class="tab-btn" onclick="switchMode('bridge')">
+                        <i class="fa-solid fa-arrows-split-up-and-left"></i> Dual-WS Bridge
+                    </button>
+                </div>
+
+                <!-- CAREDESK CONFIG -->
+                <div id="caredeskPanel" style="display: flex; flex-direction: column; gap: 12px;">
+                    <div class="form-group">
+                        <label for="caredeskWsUrl"><i class="fa-solid fa-link"></i> Target Bot WebSocket URL</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-globe input-icon"></i>
+                            <input type="text" id="caredeskWsUrl" value="wss://semivolatile-marcy-unfalsified.ngrok-free.dev/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="scenarioSelect"><i class="fa-solid fa-vial-virus"></i> Testing Scenario & Stress Mode</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-flask-vial input-icon"></i>
+                            <select id="scenarioSelect">
+                                <optgroup label="💥 Adversarial & Chaos Testing (Try to Break Bot)">
+                                    <option value="ADVERSARIAL_BREAK_BOT" selected>💥 Extreme Chaos: Contradictions, Bizarre Claims & Traps</option>
+                                    <option value="ADVERSARIAL_CODE_SWITCH">🌐 Multilingual Chaos (Kannada + English + Hindi)</option>
+                                    <option value="ADVERSARIAL_CONTRADICTIONS">🔀 Rapid Intent Flips (Book ➔ Cancel ➔ Reschedule)</option>
+                                    <option value="ADVERSARIAL_INTERRUPT_NOISE">📢 Conversational Noise & Distractions (Hesitations)</option>
+                                    <option value="ADVERSARIAL_OUT_OF_SCOPE">🐶 Bizarre Out-of-Scope Demands (Dog clinic, 3 AM slot)</option>
+                                    <option value="ADVERSARIAL_DERAIL_PROMPT">🛡️ Guardrail Probing & Prompt Injection</option>
+                                </optgroup>
+                                <optgroup label="Standard Telephony Flows">
+                                    <option value="Booking">📅 New Appointment Booking (Polite Baseline)</option>
+                                    <option value="RESCHEDULE">🔄 Reschedule Appointment</option>
+                                    <option value="CANCEL">❌ Appointment Cancellation</option>
+                                    <option value="INQUIRY">❓ General Medical Inquiry</option>
+                                    <option value="FOLLOW-UP">📋 Follow-up Consultation</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- NOISE SIMULATION PILLS -->
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-waveform-lines"></i> Telephony Audio Noise Level</label>
+                        <div class="pill-group">
+                            <div class="pill-option active" data-val="light_static" onclick="selectNoisePill(this, 'light_static')">📻 Mobile Static</div>
+                            <div class="pill-option" data-val="heavy_room" onclick="selectNoisePill(this, 'heavy_room')">🏢 Room Murmur</div>
+                            <div class="pill-option" data-val="none" onclick="selectNoisePill(this, 'none')">🔇 Clean Studio</div>
+                        </div>
+                        <input type="hidden" id="noiseSelect" value="light_static">
+                    </div>
+
+                    <!-- MAX TURNS PILLS -->
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-arrow-rotate-right"></i> Max Conversation Turns</label>
+                        <div class="pill-group">
+                            <div class="pill-option" data-val="15" onclick="selectTurnsPill(this, 15)">15</div>
+                            <div class="pill-option active" data-val="25" onclick="selectTurnsPill(this, 25)">25 (Default)</div>
+                            <div class="pill-option" data-val="35" onclick="selectTurnsPill(this, 35)">35</div>
+                            <div class="pill-option" data-val="50" onclick="selectTurnsPill(this, 50)">50</div>
+                        </div>
+                        <input type="hidden" id="maxTurnsSelect" value="25">
+                    </div>
+
+                    <div class="btn-row">
+                        <button id="startCareDeskBtn" class="btn-start" onclick="startCareDeskTest()">
+                            <i class="fa-solid fa-play"></i> Start Bot-to-Bot Call
+                        </button>
+                        <button id="stopCareDeskBtn" class="btn-stop" onclick="stopCareDeskTest()" disabled>
+                            <i class="fa-solid fa-phone-slash"></i> Hang Up
+                        </button>
+                    </div>
+                </div>
+
+                <!-- DUAL-WS BRIDGE CONFIG -->
+                <div id="bridgePanel" style="display: none; flex-direction: column; gap: 12px;">
+                    <div class="form-group">
+                        <label for="botAUrl"><i class="fa-solid fa-hospital"></i> Bot A URL</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-server input-icon"></i>
+                            <input type="text" id="botAUrl" value="ws://localhost:5001">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="botBUrl"><i class="fa-solid fa-user-doctor"></i> Bot B URL</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-server input-icon"></i>
+                            <input type="text" id="botBUrl" value="ws://localhost:5002">
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button id="startBridgeBtn" class="btn-start" onclick="startBridge()">
+                            <i class="fa-solid fa-play"></i> Start Bridge
+                        </button>
+                        <button id="stopBridgeBtn" class="btn-stop" onclick="stopBridge()" disabled>
+                            <i class="fa-solid fa-stop"></i> Stop
+                        </button>
+                    </div>
+
+                    <button id="mockToggleBtn" class="btn-secondary" style="width: 100%; padding: 8px;" onclick="toggleMocks()">
+                        <i class="fa-solid fa-cube"></i> Start Local Mock Bots (5001 & 5002)
+                    </button>
+                </div>
+            </div>
+
+            <!-- LOG TERMINAL -->
+            <div class="card terminal-wrap">
+                <div class="card-header">
+                    <div class="card-title"><i class="fa-solid fa-terminal"></i> Telephony Stream Logs</div>
+                    <button class="btn-secondary" style="padding: 2px 7px;" onclick="clearLogs()">
+                        <i class="fa-solid fa-eraser"></i> Clear
+                    </button>
+                </div>
+                <div id="logTerminal" class="log-terminal">
+                    <div class="log-line log-info">[System] Voice QA Studio ready on port 4002.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: CONVERSATION FEED -->
+        <div class="card feed-card">
+            <div class="card-header">
+                <div class="card-title" style="color: var(--text-heading); font-size: 13px;">
+                    <i class="fa-solid fa-comments" style="color: var(--accent-indigo);"></i>
+                    Live Telephony Conversation Feed
+                </div>
+                <button class="btn-secondary" onclick="clearChat()">
+                    <i class="fa-solid fa-broom"></i> Clear Feed
+                </button>
+            </div>
+
+            <!-- CHAT STREAM SCROLL AREA -->
+            <div id="chatContainer" class="chat-scroll">
+                <div id="emptyChatPlaceholder" class="empty-state">
+                    <i class="fa-solid fa-headset"></i>
+                    <h3>Session Idle</h3>
+                    <p>Select your scenario and click <b>Start Bot-to-Bot Call</b> to begin testing CareDesk in real-time!</p>
+                </div>
+            </div>
+
+            <!-- SLEEK DOCKED AUDIO PLAYER (POSITIONED CLEANLY AT BOTTOM) -->
+            <div id="dockedAudioBar" class="docked-audio-bar" style="display: none;">
+                <button id="audioPlayBtn" class="audio-play-btn" onclick="toggleAudioPlayback()">
+                    <i id="playIcon" class="fa-solid fa-play"></i>
+                </button>
+                
+                <div class="audio-track-info">
+                    <div class="audio-track-top">
+                        <span class="track-title"><i class="fa-solid fa-circle-check"></i> Call Recording Saved</span>
+                        <span id="audioTimerText" class="track-timer">0:00 / 0:00</span>
+                    </div>
+                    <div id="scrubberTrack" class="audio-scrubber-wrap" onclick="seekAudio(event)">
+                        <div id="scrubberFill" class="audio-scrubber-fill"></div>
+                    </div>
+                </div>
+
+                <a id="downloadAudioLink" class="btn-download-pill" download>
+                    <i class="fa-solid fa-download"></i> Download WAV
+                </a>
+
+                <button class="btn-close-audio" onclick="closeAudioBar()" title="Dismiss player">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <audio id="hiddenAudioPlayer" preload="metadata"></audio>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentMode = 'caredesk';
+        let mockRunning = false;
+        let turnCounter = 0;
+        let sessionTimer = null;
+        let sessionSeconds = 0;
+
+        function switchMode(mode) {
+            currentMode = mode;
+            document.getElementById('tabCareDesk').className = 'tab-btn ' + (mode === 'caredesk' ? 'active' : '');
+            document.getElementById('tabBridge').className = 'tab-btn ' + (mode === 'bridge' ? 'active' : '');
+            document.getElementById('caredeskPanel').style.display = mode === 'caredesk' ? 'flex' : 'none';
+            document.getElementById('bridgePanel').style.display = mode === 'bridge' ? 'flex' : 'none';
+        }
+
+        function selectNoisePill(el, val) {
+            document.querySelectorAll('[data-val="light_static"], [data-val="heavy_room"], [data-val="none"]').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('noiseSelect').value = val;
+        }
+
+        function selectTurnsPill(el, val) {
+            document.querySelectorAll('[data-val="15"], [data-val="25"], [data-val="35"], [data-val="50"]').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('maxTurnsSelect').value = val;
+        }
+
+        // SSE STREAMING
+        const eventSource = new EventSource('/api/bridge/events');
+
+        eventSource.addEventListener('caredesk_status', (e) => {
+            const status = JSON.parse(e.data);
+            updateCareDeskStatus(status);
+        });
+
+        eventSource.addEventListener('status', (e) => {
+            const status = JSON.parse(e.data);
+            if (currentMode === 'bridge') updateBridgeStatus(status);
+        });
+
+        eventSource.addEventListener('turn', (e) => {
+            const turn = JSON.parse(e.data);
+            appendTurnToChat(turn);
+        });
+
+        eventSource.addEventListener('log', (e) => {
+            const log = JSON.parse(e.data);
+            appendLog(log);
+        });
+
+        eventSource.addEventListener('recording_saved', (e) => {
+            const rec = JSON.parse(e.data);
+            loadAudioRecording(rec, true);
+        });
+
+        eventSource.addEventListener('mock_status', (e) => {
+            const data = JSON.parse(e.data);
+            mockRunning = data.isRunning;
+            const btn = document.getElementById('mockToggleBtn');
+            btn.innerHTML = mockRunning 
+                ? '<i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Mock Bots Running' 
+                : '<i class="fa-solid fa-cube"></i> Start Local Mock Bots (5001 & 5002)';
+        });
+
+        async function startCareDeskTest() {
+            const targetUrl = document.getElementById('caredeskWsUrl').value.trim();
+            const scenario = document.getElementById('scenarioSelect').value;
+            const noiseType = document.getElementById('noiseSelect').value;
+            const maxTurns = parseInt(document.getElementById('maxTurnsSelect').value, 10) || 25;
+
+            try {
+                const res = await fetch('/api/caredesk/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ targetUrl, options: { scenario, persona: 'Self', noiseType, maxTurns } })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Error starting session: ' + data.error);
+                } else {
+                    document.getElementById('emptyChatPlaceholder')?.remove();
+                    startDurationTimer();
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+            }
+        }
+
+        async function stopCareDeskTest() {
+            try {
+                await fetch('/api/caredesk/stop', { method: 'POST' });
+                stopDurationTimer();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function startBridge() {
+            const payload = {
+                botAUrl: document.getElementById('botAUrl').value.trim(),
+                botBUrl: document.getElementById('botBUrl').value.trim(),
+                mode: 'audio',
+                initiator: 'botB'
+            };
+            await fetch('/api/bridge/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            startDurationTimer();
+        }
+
+        async function stopBridge() {
+            await fetch('/api/bridge/stop', { method: 'POST' });
+            stopDurationTimer();
+        }
+
+        async function toggleMocks() {
+            const endpoint = mockRunning ? '/api/mocks/stop' : '/api/mocks/start';
+            await fetch(endpoint, { method: 'POST' });
+        }
+
+        function updateCareDeskStatus(status) {
+            const sessionDot = document.getElementById('sessionDot');
+            const sessionText = document.getElementById('sessionStatusText');
+            const miniEq = document.getElementById('miniEq');
+            const startBtn = document.getElementById('startCareDeskBtn');
+            const stopBtn = document.getElementById('stopCareDeskBtn');
+
+            if (status.status === 'active') {
+                sessionDot.className = 'pulse-dot active';
+                sessionText.textContent = 'CALL ACTIVE';
+                sessionText.style.color = 'var(--success)';
+                miniEq.classList.add('animating');
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else if (status.status === 'connecting') {
+                sessionDot.className = 'pulse-dot';
+                sessionDot.style.background = 'var(--warning)';
+                sessionText.textContent = 'CONNECTING';
+                sessionText.style.color = 'var(--warning)';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+            } else {
+                sessionDot.className = 'pulse-dot';
+                sessionDot.style.background = 'var(--text-faint)';
+                sessionText.textContent = 'IDLE';
+                sessionText.style.color = 'var(--text-muted)';
+                miniEq.classList.remove('animating');
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                stopDurationTimer();
+            }
+
+            if (status.lastSavedRecording) {
+                loadAudioRecording(status.lastSavedRecording, false);
+            }
+        }
+
+        function appendTurnToChat(turn) {
+            document.getElementById('emptyChatPlaceholder')?.remove();
+            turnCounter++;
+            document.getElementById('metricTurns').textContent = `${turnCounter} turns`;
+
+            const isCareDesk = turn.from === 'botA';
+            const rowClass = isCareDesk ? 'caredesk' : 'patient';
+            const avatarIcon = isCareDesk ? '<i class="fa-solid fa-hospital"></i>' : '<i class="fa-solid fa-user-astronaut"></i>';
+            const avatarClass = isCareDesk ? 'avatar-caredesk' : 'avatar-patient';
+
+            const container = document.getElementById('chatContainer');
+            const row = document.createElement('div');
+            row.className = `message-row ${rowClass}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = `avatar ${avatarClass}`;
+            avatar.innerHTML = avatarIcon;
+
+            const content = document.createElement('div');
+            content.className = 'bubble-content';
+
+            const meta = document.createElement('div');
+            meta.className = 'bubble-meta';
+
+            const sender = document.createElement('span');
+            sender.className = 'sender-name';
+            sender.textContent = turn.senderName;
+
+            const chip = document.createElement('span');
+            chip.className = 'turn-chip';
+            chip.textContent = `Turn ${turnCounter}`;
+
+            const time = document.createElement('span');
+            time.className = 'msg-time';
+            time.textContent = turn.timestamp || new Date().toLocaleTimeString();
+
+            meta.appendChild(sender);
+            meta.appendChild(chip);
+            meta.appendChild(time);
+
+            const box = document.createElement('div');
+            box.className = 'bubble-box';
+            box.textContent = turn.text;
+
+            content.appendChild(meta);
+            content.appendChild(box);
+
+            if (isCareDesk) {
+                row.appendChild(avatar);
+                row.appendChild(content);
+            } else {
+                row.appendChild(content);
+                row.appendChild(avatar);
+            }
+
+            container.appendChild(row);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendLog(log) {
+            const terminal = document.getElementById('logTerminal');
+            const line = document.createElement('div');
+            line.className = `log-line log-${log.level || 'info'}`;
+            line.textContent = `[${log.time || new Date().toLocaleTimeString()}] ${log.message}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // AUDIO PLAYER LOGIC
+        const audio = document.getElementById('hiddenAudioPlayer');
+        const playBtn = document.getElementById('audioPlayBtn');
+        const playIcon = document.getElementById('playIcon');
+        const scrubberFill = document.getElementById('scrubberFill');
+        const timerText = document.getElementById('audioTimerText');
+
+        function loadAudioRecording(rec, autoShow = false) {
+            if (!rec || !rec.url) return;
+            audio.src = rec.url;
+            document.getElementById('downloadAudioLink').href = rec.url;
+            document.getElementById('downloadAudioLink').download = rec.filename || 'recording.wav';
+            
+            document.getElementById('lastRecToggleBtn').style.display = 'inline-flex';
+
+            if (autoShow) {
+                document.getElementById('dockedAudioBar').style.display = 'flex';
+            }
+        }
+
+        function toggleAudioPlayback() {
+            if (!audio.src) return;
+            if (audio.paused) {
+                audio.play();
+                playIcon.className = 'fa-solid fa-pause';
+            } else {
+                audio.pause();
+                playIcon.className = 'fa-solid fa-play';
+            }
+        }
+
+        audio.addEventListener('timeupdate', () => {
+            if (!audio.duration || isNaN(audio.duration)) return;
+            const pct = (audio.currentTime / audio.duration) * 100;
+            scrubberFill.style.width = pct + '%';
+            timerText.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+        });
+
+        audio.addEventListener('ended', () => {
+            playIcon.className = 'fa-solid fa-play';
+            scrubberFill.style.width = '0%';
+        });
+
+        audio.addEventListener('loadedmetadata', () => {
+            timerText.textContent = `0:00 / ${formatTime(audio.duration)}`;
+        });
+
+        function seekAudio(e) {
+            const track = document.getElementById('scrubberTrack');
+            const rect = track.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const pct = Math.max(0, Math.min(1, clickX / rect.width));
+            if (audio.duration) {
+                audio.currentTime = pct * audio.duration;
+            }
+        }
+
+        function formatTime(sec) {
+            if (!sec || isNaN(sec)) return '0:00';
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function toggleRecordingBar() {
+            const bar = document.getElementById('dockedAudioBar');
+            bar.style.display = bar.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function closeAudioBar() {
+            audio.pause();
+            playIcon.className = 'fa-solid fa-play';
+            document.getElementById('dockedAudioBar').style.display = 'none';
+        }
+
+        function startDurationTimer() {
+            if (sessionTimer) clearInterval(sessionTimer);
+            sessionSeconds = 0;
+            document.getElementById('metricDuration').textContent = '00:00';
+            sessionTimer = setInterval(() => {
+                sessionSeconds++;
+                const mins = String(Math.floor(sessionSeconds / 60)).padStart(2, '0');
+                const secs = String(sessionSeconds % 60).padStart(2, '0');
+                document.getElementById('metricDuration').textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopDurationTimer() {
+            if (sessionTimer) {
+                clearInterval(sessionTimer);
+                sessionTimer = null;
+            }
+        }
+
+        function clearChat() {
+            document.getElementById('chatContainer').innerHTML = `
+                <div id="emptyChatPlaceholder" class="empty-state">
+                    <i class="fa-solid fa-headset"></i>
+                    <h3>Session Idle</h3>
+                    <p>Select your scenario and click <b>Start Bot-to-Bot Call</b> to begin testing CareDesk in real-time!</p>
+                </div>
+            `;
+            turnCounter = 0;
+            document.getElementById('metricTurns').textContent = '0 turns';
+            document.getElementById('dockedAudioBar').style.display = 'none';
+            audio.pause();
+            playIcon.className = 'fa-solid fa-play';
+        }
+
+        function clearLogs() {
+            document.getElementById('logTerminal').innerHTML = '<div class="log-line log-info">[System] Logs cleared.</div>';
+        }
+
+        // Initial fetch of recent recordings
+        fetch('/api/recordings').then(r => r.json()).then(data => {
+            if (data.recordings && data.recordings.length > 0) {
+                loadAudioRecording(data.recordings[0], false);
+            }
+        }).catch(() => {});
+    </script>
+</body>
+</html>

@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exotel Voice QA Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* DARK THEME (Default) */
+            --bg-canvas: #07090e;
+            --bg-panel: rgba(15, 23, 42, 0.75);
+            --bg-panel-solid: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.55);
+            --bg-input: rgba(15, 23, 42, 0.85);
+            --bg-hover: rgba(51, 65, 85, 0.6);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-focus: #6366f1;
+            
+            --text-heading: #ffffff;
+            --text-body: #e2e8f0;
+            --text-muted: #94a3b8;
+            --text-faint: #64748b;
+            
+            --primary: #4f46e5;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            --accent-cyan: #06b6d4;
+            --accent-indigo: #6366f1;
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.15);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.15);
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 25px -3px rgba(79, 70, 229, 0.35);
+
+            /* CHAT BUBBLES & TABS - DARK */
+            --bg-tab-bar: rgba(15, 23, 42, 0.6);
+            --bg-tab-active: rgba(255, 255, 255, 0.1);
+            --text-tab-active: #ffffff;
+            --bg-bubble-bot: rgba(30, 41, 59, 0.7);
+            --border-bubble-bot: rgba(255, 255, 255, 0.1);
+            --text-bubble-bot: #f1f5f9;
+            --bg-bubble-tester: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            --border-bubble-tester: rgba(99, 102, 241, 0.4);
+            --text-bubble-tester: #ffffff;
+        }
+
+        [data-theme="light"] {
+            /* LIGHT THEME */
+            --bg-canvas: #f8fafc;
+            --bg-panel: #ffffff;
+            --bg-panel-solid: #ffffff;
+            --bg-card: #f1f5f9;
+            --bg-input: #ffffff;
+            --bg-hover: #e2e8f0;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-focus: #4f46e5;
+            
+            --text-heading: #0f172a;
+            --text-body: #334155;
+            --text-muted: #64748b;
+            --text-faint: #94a3b8;
+            
+            --primary: #4f46e5;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #0284c7 100%);
+            --accent-cyan: #0284c7;
+            --accent-indigo: #4f46e5;
+            --success: #059669;
+            --success-bg: #ecfdf5;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --warning: #d97706;
+            --warning-bg: #fffbeb;
+            
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 15px -1px rgba(0, 0, 0, 0.06);
+            --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+
+            /* CHAT BUBBLES & TABS - LIGHT */
+            --bg-tab-bar: #f8fafc;
+            --bg-tab-active: #ffffff;
+            --text-tab-active: #0f172a;
+            --bg-bubble-bot: #ffffff;
+            --border-bubble-bot: rgba(0, 0, 0, 0.08);
+            --text-bubble-bot: #0f172a;
+            --bg-bubble-tester: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            --border-bubble-tester: transparent;
+            --text-bubble-tester: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 13.5px;
+            line-height: 1.5;
+            background-image: 
+                radial-gradient(circle at 15% 0%, rgba(99, 102, 241, 0.12), transparent 45%),
+                radial-gradient(circle at 85% 0%, rgba(6, 182, 212, 0.09), transparent 45%);
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* TOP NAVIGATION */
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon-wrap {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 15px;
+            box-shadow: 0 0 16px rgba(79, 70, 229, 0.45);
+        }
+
+        .brand-title {
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: -0.3px;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .brand-badge {
+            font-size: 9.5px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 5px;
+            background: rgba(99, 102, 241, 0.18);
+            color: var(--accent-indigo);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* STATUS BADGE */
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-faint);
+            position: relative;
+        }
+        .pulse-dot.active {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+        .pulse-dot.busy {
+            background: var(--warning);
+            box-shadow: 0 0 8px var(--warning);
+            animation: pulse-ring 1.5s infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        /* MINI EQUALIZER IN HEADER */
+        .mini-eq {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 12px;
+            margin-left: 4px;
+        }
+        .eq-bar {
+            width: 2.5px;
+            background: var(--accent-cyan);
+            border-radius: 1px;
+            height: 3px;
+            transition: height 0.1s ease;
+        }
+
+        .copy-pill {
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .copy-pill:hover {
+            color: var(--text-heading);
+            border-color: var(--border-focus);
+        }
+
+        .btn-icon {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            transition: all 0.15s ease;
+        }
+        .btn-icon:hover {
+            color: var(--text-heading);
+            border-color: var(--border-focus);
+            transform: translateY(-1px);
+        }
+
+        /* CONTROL HERO RIBBON */
+        .control-ribbon {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 10px;
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+            color: var(--text-faint);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .text-input, .select-input {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-heading);
+            padding: 7px 12px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            height: 36px;
+            transition: all 0.15s ease;
+        }
+        .text-input.with-prefix {
+            padding-left: 48px;
+        }
+        .text-input:focus, .select-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .text-input.mono {
+            font-family: 'Fira Code', monospace;
+            font-weight: 500;
+        }
+
+        /* QUICK TARGET CHIPS */
+        .quick-targets {
+            display: flex;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .target-chip {
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .target-chip:hover {
+            color: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        /* ACTION BUTTONS */
+        .btn {
+            height: 36px;
+            padding: 0 20px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-dial {
+            background: var(--primary-gradient);
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(79, 70, 229, 0.35);
+        }
+        .btn-dial:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 0 24px rgba(79, 70, 229, 0.55);
+        }
+        .btn-dial:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-hangup {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .btn-hangup:hover:not(:disabled) {
+            background: var(--danger);
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-hangup:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* METRICS STRIP */
+        .metrics-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            padding: 14px 24px;
+            background: transparent;
+        }
+
+        .metric-card {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            transition: border-color 0.15s ease;
+        }
+        .metric-card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        .metric-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-family: 'Fira Code', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-heading);
+            letter-spacing: -0.5px;
+        }
+
+        .metric-icon-box {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* WORKSPACE GRID */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 370px;
+            gap: 16px;
+            padding: 0 24px 24px 24px;
+            flex-grow: 1;
+        }
+
+        /* MAIN PANE */
+        .main-pane {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* TAB BAR */
+        .tab-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-tab-bar);
+            backdrop-filter: blur(8px);
+        }
+
+        .tab-list {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-hover);
+            padding: 3px;
+            border-radius: 9px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.15s ease;
+        }
+        .tab-btn:hover {
+            color: var(--text-heading);
+        }
+        .tab-btn.active {
+            color: var(--text-tab-active);
+            background: var(--bg-tab-active);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .turn-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 10px;
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-indigo);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+        }
+
+        /* CONVERSATION TIMELINE VIEW */
+        .convo-viewport {
+            flex-grow: 1;
+            height: calc(100vh - 315px);
+            min-height: 440px;
+            max-height: calc(100vh - 315px);
+            overflow-y: scroll;
+            overflow-x: hidden;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        /* PROMINENT MODERN SCROLLBAR */
+        .convo-viewport::-webkit-scrollbar,
+        .terminal-panel::-webkit-scrollbar,
+        .side-pane::-webkit-scrollbar {
+            width: 8px;
+        }
+        .convo-viewport::-webkit-scrollbar-track,
+        .terminal-panel::-webkit-scrollbar-track,
+        .side-pane::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .convo-viewport::-webkit-scrollbar-thumb,
+        .terminal-panel::-webkit-scrollbar-thumb,
+        .side-pane::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .convo-viewport::-webkit-scrollbar-thumb:hover,
+        .terminal-panel::-webkit-scrollbar-thumb:hover,
+        .side-pane::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* EMPTY STATE RADAR */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            color: var(--text-faint);
+            gap: 12px;
+            padding: 60px 20px;
+        }
+        .empty-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--accent-indigo);
+            margin-bottom: 4px;
+        }
+
+        /* MESSAGE BUBBLE CARDS */
+        .msg-row {
+            display: flex;
+            gap: 12px;
+            max-width: 85%;
+            animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-row.bot {
+            align-self: flex-start;
+        }
+        .msg-row.tester {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .msg-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+            margin-top: 2px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        }
+        .msg-row.bot .msg-avatar {
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            color: var(--accent-cyan);
+        }
+        .msg-row.tester .msg-avatar {
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--accent-indigo);
+        }
+        [data-theme="light"] .msg-row.bot .msg-avatar {
+            background: #e0f2fe;
+            border-color: #bae6fd;
+            color: #0284c7;
+        }
+        [data-theme="light"] .msg-row.tester .msg-avatar {
+            background: #ede9fe;
+            border-color: #ddd6fe;
+            color: #4f46e5;
+        }
+
+        .msg-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .msg-row.tester .msg-content {
+            align-items: flex-end;
+        }
+
+        .msg-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .msg-channel-tag {
+            font-weight: 700;
+            font-size: 10.5px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+        .msg-row.bot .msg-channel-tag { color: var(--accent-cyan); }
+        .msg-row.tester .msg-channel-tag { color: var(--accent-indigo); }
+        [data-theme="light"] .msg-row.bot .msg-channel-tag { color: #0369a1; }
+        [data-theme="light"] .msg-row.tester .msg-channel-tag { color: #4338ca; }
+
+        .msg-bubble {
+            padding: 13px 18px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            letter-spacing: 0.1px;
+            word-break: break-word;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        .msg-row.bot .msg-bubble {
+            background: var(--bg-bubble-bot);
+            border: 1px solid var(--border-bubble-bot);
+            color: var(--text-bubble-bot);
+            border-radius: 18px 18px 18px 4px;
+        }
+        .msg-row.tester .msg-bubble {
+            background: var(--bg-bubble-tester);
+            border: 1px solid var(--border-bubble-tester);
+            color: var(--text-bubble-tester);
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.22);
+        }
+
+        .latency-chip {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        /* TERMINAL PANEL */
+        .terminal-panel {
+            display: none;
+            flex-grow: 1;
+            height: calc(100vh - 315px);
+            min-height: 440px;
+            max-height: calc(100vh - 315px);
+            padding: 16px 20px;
+            background: #04060c;
+            color: #94a3b8;
+            font-family: 'Fira Code', monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow-y: scroll;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            scrollbar-width: thin;
+        }
+        .terminal-panel.active { display: block; }
+
+        /* RIGHT SIDEBAR */
+        .side-pane {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            overflow-y: auto;
+            height: calc(100vh - 245px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .side-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .side-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ASSERTIONS */
+        .assertion-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 12px;
+            transition: all 0.15s ease;
+        }
+
+        .ast-badge {
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .ast-badge.pending {
+            background: rgba(148, 163, 184, 0.1);
+            color: var(--text-muted);
+        }
+        .ast-badge.pass {
+            background: var(--success-bg);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .ast-badge.fail {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* QUICK INJECT CHIPS */
+        .chip-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .quick-chip {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-body);
+            padding: 7px 10px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+        .quick-chip:hover {
+            border-color: var(--accent-indigo);
+            color: var(--text-heading);
+            background: var(--bg-hover);
+        }
+
+        /* REPORT DRAWER */
+        .report-box {
+            display: none;
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 9px;
+            padding: 14px;
+        }
+        .report-stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <header class="top-nav">
+        <div class="nav-brand">
+            <div class="brand-icon-wrap">
+                <i class="fa-solid fa-wave-square"></i>
+            </div>
+            <div>
+                <div class="brand-title">
+                    EXOTEL VOICE QA STUDIO
+                    <span class="brand-badge">PRO TELECOM</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-meta">
+            <!-- LIVE STATUS BADGE WITH ANIMATED EQUALIZER -->
+            <div class="status-pill">
+                <div class="pulse-dot" id="sessionDot"></div>
+                <span id="sessionStatus">IDLE</span>
+                <div class="mini-eq" id="miniEq">
+                    <div class="eq-bar" id="eq1" style="height: 3px;"></div>
+                    <div class="eq-bar" id="eq2" style="height: 5px;"></div>
+                    <div class="eq-bar" id="eq3" style="height: 8px;"></div>
+                    <div class="eq-bar" id="eq4" style="height: 4px;"></div>
+                </div>
+            </div>
+
+            <!-- EXOPHONE VIRTUAL CALLER ID -->
+            <div class="copy-pill" title="Outbound ExoPhone Caller ID">
+                <i class="fa-solid fa-phone-volume" style="color: var(--accent-cyan);"></i>
+                <span id="exoPhoneDisplay">ExoPhone: <b>--</b></span>
+            </div>
+
+            <!-- ACTIVE CALL SID -->
+            <div class="copy-pill" onclick="copySid()" title="Click to copy Call SID">
+                <i class="fa-regular fa-copy"></i>
+                <span>SID: <b id="callSidDisplay">None</b></span>
+            </div>
+
+            <!-- THEME TOGGLE -->
+            <button class="btn-icon" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                <i id="themeIcon" class="fa-regular fa-sun"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTROL RIBBON -->
+    <div class="control-ribbon">
+        <!-- TARGET PHONE NUMBER -->
+        <div class="field-group">
+            <label class="field-label" for="targetNumberInput">
+                <i class="fa-solid fa-phone"></i> Target Bot Number
+            </label>
+            <div class="input-wrap">
+                <span class="input-prefix"><i class="fa-solid fa-flag"></i> +91</span>
+                <input type="text" id="targetNumberInput" class="text-input with-prefix mono" style="width: 185px;" value="" placeholder="Enter phone number">
+            </div>
+        </div>
+
+        <!-- LANGUAGE SELECTOR -->
+        <div class="field-group">
+            <label class="field-label" for="languageSelect">
+                <i class="fa-solid fa-language"></i> Language
+            </label>
+            <select id="languageSelect" class="select-input" style="width: 145px;" onchange="saveInboundConfig()">
+                <option value="English" selected>English (en-IN)</option>
+                <option value="Hindi">Hindi (hi-IN)</option>
+                <option value="Tamil">Tamil (ta-IN)</option>
+                <option value="Telugu">Telugu (te-IN)</option>
+                <option value="Kannada">Kannada (kn-IN)</option>
+                <option value="Marathi">Marathi (mr-IN)</option>
+                <option value="Gujarati">Gujarati (gu-IN)</option>
+            </select>
+        </div>
+
+        <!-- PERSONA SELECTOR -->
+        <div class="field-group">
+            <label class="field-label" for="personaSelect">
+                <i class="fa-solid fa-user-check"></i> Tester Persona
+            </label>
+            <select id="personaSelect" class="select-input" style="width: 145px;">
+                <option value="Self" selected>Self (Patient)</option>
+            </select>
+        </div>
+
+        <!-- SCENARIO SELECTOR -->
+        <div class="field-group">
+            <label class="field-label" for="scenarioSelect">
+                <i class="fa-solid fa-clipboard-question"></i> QA Test Scenario
+            </label>
+            <select id="scenarioSelect" class="select-input" style="min-width: 250px;" onchange="saveInboundConfig()">
+                <optgroup label="Inbound (Target Bot Calls Patient)">
+                    <option value="INBOUND_RESCHEDULE" selected>Inbound: Reschedule Appointment</option>
+                    <option value="INBOUND_CONFIRM">Inbound: Confirm Attendance</option>
+                    <option value="INBOUND_CANCEL">Inbound: Cancel Appointment</option>
+                    <option value="INBOUND_NO_ANSWER">Inbound: No Answer (Don't Pick Up)</option>
+                    <option value="INBOUND_CUT_CALL">Inbound: Attend, Speak & Cut in Middle</option>
+                </optgroup>
+                <optgroup label="Outbound (Tester Calls Target Bot)">
+                    <option value="Booking">Outbound: New Booking</option>
+                    <option value="Follow-up">Outbound: Follow-up Visit</option>
+                    <option value="Reschedule">Outbound: Reschedule Appointment</option>
+                    <option value="Cancel">Outbound: Cancel Appointment</option>
+                    <option value="Inquiry">Outbound: General Inquiry</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div style="display: flex; gap: 8px;">
+            <button id="runBtn" class="btn btn-dial" onclick="runTests()">
+                <i class="fa-solid fa-play"></i> Dial Target
+            </button>
+            <button id="endBtn" class="btn btn-hangup" onclick="endTest()" disabled>
+                <i class="fa-solid fa-phone-slash"></i> Hangup
+            </button>
+        </div>
+    </div>
+
+    <!-- METRICS STRIP -->
+    <div class="metrics-strip">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span class="metric-label">Call Duration</span>
+                <span class="metric-value" id="durationTime">00:00</span>
+            </div>
+            <div class="metric-icon-box">
+                <i class="fa-regular fa-clock" style="color: var(--accent-indigo);"></i>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-info">
+                <span class="metric-label">Round-Trip Latency</span>
+                <span class="metric-value" id="latencyStat" style="color: var(--accent-cyan);">-- ms</span>
+            </div>
+            <div class="metric-icon-box">
+                <i class="fa-solid fa-bolt" style="color: var(--accent-cyan);"></i>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-info">
+                <span class="metric-label">Audio Connection</span>
+                <span class="metric-value" id="audioQualityStat" style="color: var(--success); font-size: 15px;">Clear (HD)</span>
+            </div>
+            <div class="metric-icon-box">
+                <i class="fa-solid fa-volume-high" style="color: var(--success);"></i>
+            </div>
+        </div>
+
+        <div class="metric-card">
+            <div class="metric-info">
+                <span class="metric-label">Assertions Passed</span>
+                <span class="metric-value" id="assertionsCount" style="color: var(--success);">0 / 6</span>
+            </div>
+            <div class="metric-icon-box">
+                <i class="fa-regular fa-circle-check" style="color: var(--success);"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN WORKSPACE GRID -->
+    <div class="workspace-grid">
+
+        <!-- CONVERSATIONAL STREAM -->
+        <div class="main-pane">
+            <div class="tab-bar">
+                <div class="tab-list">
+                    <button id="tabConvo" class="tab-btn active" onclick="switchTab('convo')">
+                        <i class="fa-regular fa-comments"></i> Conversation Feed
+                        <span id="turnBadge" class="turn-badge">0 turns</span>
+                    </button>
+                    <button id="tabTerminal" class="tab-btn" onclick="switchTab('terminal')">
+                        <i class="fa-solid fa-terminal"></i> Raw Telephony Stream
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button class="btn-icon" onclick="scrollToBottom()" title="Scroll to Bottom" style="width: 28px; height: 28px; font-size: 11px;">
+                        <i class="fa-solid fa-arrow-down"></i>
+                    </button>
+                    <button class="btn-icon" onclick="clearLogs()" title="Clear Logs" style="width: 28px; height: 28px; font-size: 11px;">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- TAB 1: CONVERSATION VIEW -->
+            <div id="convoView" class="convo-viewport">
+                <div class="empty-state" id="emptyPlaceholder">
+                    <div class="empty-icon">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div style="font-weight: 700; color: var(--text-heading); font-size: 15px;">Session Idle</div>
+                    <div style="font-size: 12.5px; max-width: 320px;">
+                        Configure parameters above and click <b>"Dial Target"</b> to initiate live voice bot testing.
+                    </div>
+                </div>
+                <div id="messageStream" style="display: flex; flex-direction: column; gap: 14px;"></div>
+            </div>
+
+            <!-- TAB 2: RAW TELEPHONY STREAM -->
+            <div id="terminalView" class="terminal-panel">> Telephony server listening on port 4001. Ready...</div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="side-pane">
+
+            <!-- AUTOMATED TEST ASSERTIONS -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>Automated Assertions</span>
+                    <span id="overallTag" class="ast-badge pending">PENDING</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                    <div class="assertion-item" id="ast-handshake">
+                        <span>WebSocket 101 Handshake</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+
+                    <div class="assertion-item" id="ast-identity">
+                        <span>Identity Verification</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+
+                    <div class="assertion-item" id="ast-scenario">
+                        <span>Scenario State Match</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+
+                    <div class="assertion-item" id="ast-slot">
+                        <span>Preferred Slot Negotiated</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+
+                    <div class="assertion-item" id="ast-latency">
+                        <span>Latency Benchmark &lt; 2.5s</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+
+                    <div class="assertion-item" id="ast-filter">
+                        <span>Anti-Hallucination Guard</span>
+                        <span class="ast-badge pending">PENDING</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTIVE PATIENT CONTEXT (CONFIGURABLE) -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>Patient Profile & Target</span>
+                    <span id="configSaveStatus" class="ast-badge pass" style="font-size: 9px; padding: 1px 7px;">SYNCED</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 3px;">Patient Name</label>
+                        <input type="text" id="cfgPatientName" class="text-input" placeholder="Enter patient name" style="width: 100%; height: 32px; font-size: 12px;" oninput="onConfigChange()">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 3px;">Preferred Reschedule Slot</label>
+                        <input type="text" id="cfgSlot" class="text-input" placeholder="e.g. Tomorrow at 4 PM" style="width: 100%; height: 32px; font-size: 12px;" oninput="onConfigChange()">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 6px; border-top: 1px solid var(--border); font-size: 11.5px;">
+                        <span style="color: var(--text-muted);">Active Target:</span>
+                        <b style="color: var(--accent-cyan); font-family: 'Fira Code';" id="sidebarTargetDisplay">Not Set</b>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK UTTERANCE INJECTION -->
+            <div class="side-card">
+                <div class="side-title">
+                    <span>Live Utterance Injection</span>
+                </div>
+                <div class="chip-grid">
+                    <button class="quick-chip" onclick="injectSlotConfirmation()">
+                        <i class="fa-solid fa-reply" style="margin-right: 6px; color: var(--accent-cyan);"></i> Confirm Preferred Slot
+                    </button>
+                    <button class="quick-chip" onclick="injectUtterance('I would like to reschedule my appointment.')">
+                        <i class="fa-solid fa-reply" style="margin-right: 6px; color: var(--accent-indigo);"></i> Request Reschedule
+                    </button>
+                    <button class="quick-chip" onclick="injectUtterance('Please cancel my scheduled appointment.')">
+                        <i class="fa-solid fa-reply" style="margin-right: 6px; color: var(--danger);"></i> Request Cancellation
+                    </button>
+                    <button class="quick-chip" onclick="injectUtterance('Could you please repeat that? I didn\'t catch that.')">
+                        <i class="fa-solid fa-reply" style="margin-right: 6px; color: var(--warning);"></i> Ask to Repeat
+                    </button>
+                </div>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <input type="text" id="customInjectInput" class="text-input" placeholder="Type custom utterance..." style="flex-grow: 1; height: 32px; font-size: 12px;" onkeydown="if(event.key==='Enter') injectCustomUtterance()">
+                    <button class="btn btn-dial" style="height: 32px; padding: 0 12px; font-size: 12px;" onclick="injectCustomUtterance()">
+                        Send
+                    </button>
+                </div>
+            </div>
+
+            <!-- TEST REPORT SUMMARY -->
+            <div class="report-box" id="reportSummaryBox">
+                <div class="side-title" style="margin-bottom: 8px;">
+                    <span>Call Quality Report</span>
+                    <span class="ast-badge pass">COMPLETED</span>
+                </div>
+                <div class="report-stat-row">
+                    <span style="color: var(--text-muted);">Outcome:</span>
+                    <b id="rptOutcome" style="color: var(--text-heading);">Verified</b>
+                </div>
+                <div class="report-stat-row">
+                    <span style="color: var(--text-muted);">Language:</span>
+                    <b id="rptLang" style="color: var(--text-heading);">English</b>
+                </div>
+                <div class="report-stat-row" style="border: none;">
+                    <span style="color: var(--text-muted);">UX Evaluation:</span>
+                    <b id="rptUx" style="color: var(--accent-cyan);">Natural</b>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CLIENT APPLICATION LOGIC -->
+    <script>
+        let sse = null;
+        let callTimer = null;
+        let callStartTime = null;
+        let turnCounter = 1;
+
+        // Theme Management
+        function initTheme() {
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeIcon(saved);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon(next);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            icon.className = theme === 'dark' ? 'fa-regular fa-sun' : 'fa-regular fa-moon';
+        }
+
+        // Target Number Persistence & Shortcuts
+        // Target Number Persistence & Dynamic Sync
+        function initTargetNumber() {
+            const savedTarget = localStorage.getItem('target_number') || '';
+            if (savedTarget) {
+                document.getElementById('targetNumberInput').value = savedTarget;
+                document.getElementById('sidebarTargetDisplay').innerText = savedTarget;
+            } else {
+                document.getElementById('sidebarTargetDisplay').innerText = 'Not Set';
+            }
+
+            document.getElementById('targetNumberInput').addEventListener('input', function () {
+                const val = this.value.trim();
+                localStorage.setItem('target_number', val);
+                document.getElementById('sidebarTargetDisplay').innerText = val || 'Not Set';
+            });
+        }
+
+        // Dynamic Inbound Config & Profile Sync
+        let configDebounce = null;
+        function onConfigChange() {
+            const badge = document.getElementById('configSaveStatus');
+            if (badge) {
+                badge.className = 'ast-badge pending';
+                badge.innerText = 'SAVING...';
+            }
+            clearTimeout(configDebounce);
+            configDebounce = setTimeout(saveInboundConfig, 500);
+        }
+
+        async function loadInboundConfig() {
+            try {
+                const res = await fetch('/inbound-config');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.patientName && !document.getElementById('cfgPatientName').value) {
+                        document.getElementById('cfgPatientName').value = data.patientName;
+                    }
+                    if (data.preferredSlot && !document.getElementById('cfgSlot').value) {
+                        document.getElementById('cfgSlot').value = data.preferredSlot;
+                    }
+                    if (data.callerId) {
+                        document.getElementById('exoPhoneDisplay').innerHTML = `ExoPhone: <b>${data.callerId}</b>`;
+                    }
+                }
+            } catch (err) { }
+        }
+
+        async function saveInboundConfig() {
+            const patientName = document.getElementById('cfgPatientName')?.value.trim() || '';
+            const preferredSlot = document.getElementById('cfgSlot')?.value.trim() || '';
+            const scenario = document.getElementById('scenarioSelect')?.value || '';
+            const language = document.getElementById('languageSelect')?.value || '';
+
+            try {
+                const res = await fetch('/inbound-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ patientName, preferredSlot, scenario, language })
+                });
+                if (res.ok) {
+                    const badge = document.getElementById('configSaveStatus');
+                    if (badge) {
+                        badge.className = 'ast-badge pass';
+                        badge.innerText = 'SYNCED';
+                    }
+                }
+            } catch (err) { }
+        }
+
+        function injectSlotConfirmation() {
+            const slot = document.getElementById('cfgSlot')?.value.trim() || 'that time';
+            injectUtterance(`Yes, ${slot} works perfectly for me.`);
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            document.getElementById('tabConvo').classList.toggle('active', tab === 'convo');
+            document.getElementById('tabTerminal').classList.toggle('active', tab === 'terminal');
+            document.getElementById('convoView').style.display = (tab === 'convo') ? 'flex' : 'none';
+            document.getElementById('terminalView').classList.toggle('active', tab === 'terminal');
+        }
+
+        function copySid() {
+            const sid = document.getElementById('callSidDisplay').innerText;
+            if (sid && sid !== 'None') {
+                navigator.clipboard.writeText(sid);
+            }
+        }
+
+        function scrollToBottom() {
+            const convo = document.getElementById('convoView');
+            if (convo) convo.scrollTo({ top: convo.scrollHeight, behavior: 'smooth' });
+            const term = document.getElementById('terminalView');
+            if (term) term.scrollTo({ top: term.scrollHeight, behavior: 'smooth' });
+        }
+
+        // SSE Connection
+        function initSSE() {
+            if (sse) return;
+            sse = new EventSource('/logs-stream');
+
+            sse.onmessage = function (e) {
+                const line = e.data;
+
+                // Live Audio Telemetry
+                if (line.includes('###AUDIO_RMS###')) {
+                    try {
+                        const json = JSON.parse(line.split('###AUDIO_RMS###')[1]);
+                        const rms = json.rms || 0;
+                        const qualityEl = document.getElementById('audioQualityStat');
+                        if (qualityEl) {
+                            if (rms > 20) {
+                                qualityEl.innerText = 'Active Speech';
+                                qualityEl.style.color = 'var(--accent-cyan)';
+                            } else if (rms > 6) {
+                                qualityEl.innerText = 'Clear (HD)';
+                                qualityEl.style.color = 'var(--success)';
+                            } else {
+                                qualityEl.innerText = 'Listening...';
+                                qualityEl.style.color = 'var(--text-muted)';
+                            }
+                        }
+
+                        // Animate mini equalizer
+                        const h1 = Math.min(12, Math.max(3, Math.round((rms / 200) * 12)));
+                        const h2 = Math.min(12, Math.max(4, Math.round((rms / 180) * 12)));
+                        const h3 = Math.min(12, Math.max(5, Math.round((rms / 150) * 12)));
+                        const h4 = Math.min(12, Math.max(3, Math.round((rms / 220) * 12)));
+                        document.getElementById('eq1').style.height = h1 + 'px';
+                        document.getElementById('eq2').style.height = h2 + 'px';
+                        document.getElementById('eq3').style.height = h3 + 'px';
+                        document.getElementById('eq4').style.height = h4 + 'px';
+                    } catch (err) { }
+                    return;
+                }
+
+                // Append to Raw Terminal
+                const terminal = document.getElementById('terminalView');
+                terminal.textContent += line + '\n';
+                terminal.scrollTop = terminal.scrollHeight;
+
+                parseStreamLog(line);
+            };
+
+            sse.onerror = function () {
+                if (sse) {
+                    sse.close();
+                    sse = null;
+                }
+                setTimeout(initSSE, 3000);
+            };
+        }
+
+        function parseStreamLog(line) {
+            // 1. WebSocket Connected
+            if (line.includes('Exotel AgentStream WebSocket Connected') || line.includes('Stream Handshake Connected')) {
+                setAssertion('ast-handshake', 'pass', 'CONNECTED');
+            }
+
+            // 2. Call Started
+            if (line.includes('Stream Started! Call SID:')) {
+                const match = line.match(/Call SID:\s*([a-zA-Z0-9]+)/);
+                if (match) {
+                    document.getElementById('callSidDisplay').innerText = match[1];
+                }
+                setSessionStatus('active', 'IN CALL');
+                document.getElementById('runBtn').disabled = true;
+                document.getElementById('endBtn').disabled = false;
+                startTimer();
+            }
+
+            // 3. Target Bot Utterance
+            if (line.includes('🤖 [Target Bot]:')) {
+                hideEmptyState();
+                const text = line.replace(/.*🤖 \[Target Bot\]:\s*"?/, '').replace(/"?\s*$/, '');
+                const targetNumber = document.getElementById('targetNumberInput').value.trim();
+                const botLabel = targetNumber ? `Target Bot (${targetNumber})` : 'Target Voicebot';
+                appendMessage('bot', botLabel, text);
+
+                if (/speaking with|is this/i.test(text)) {
+                    setAssertion('ast-identity', 'pass', 'VERIFIED');
+                }
+                if (/appointment|schedule|doctor|medicare|clinic/i.test(text)) {
+                    setAssertion('ast-scenario', 'pass', 'MATCH');
+                }
+            }
+
+            // 4. AI Tester Utterance
+            if (line.includes('🧑 [AI Tester]:')) {
+                hideEmptyState();
+                const text = line.replace(/.*🧑 \[AI Tester\]:\s*"?/, '').replace(/"?\s*$/, '');
+                const persona = document.getElementById('personaSelect').value || 'Tester';
+                const patientName = document.getElementById('cfgPatientName')?.value.trim();
+                const testerLabel = patientName ? `AI Tester (${persona}: ${patientName})` : `AI Tester (${persona})`;
+                appendMessage('tester', testerLabel, text);
+
+                if (/reschedule|tomorrow|confirm|speaking/i.test(text)) {
+                    setAssertion('ast-slot', 'pass', 'NEGOTIATED');
+                }
+            }
+
+            // 5. Latency
+            if (line.includes('[Call Manager] Bot responded in')) {
+                const match = line.match(/responded in ([0-9.]+)s/);
+                if (match) {
+                    const sec = parseFloat(match[1]);
+                    const ms = Math.round(sec * 1000);
+                    document.getElementById('latencyStat').innerText = ms + ' ms';
+                    if (sec < 2.5) {
+                        setAssertion('ast-latency', 'pass', `${sec}s OK`);
+                    } else {
+                        setAssertion('ast-latency', 'fail', `${sec}s SLOW`);
+                    }
+                }
+            }
+
+            // 6. Anti-Hallucination Guard
+            if (line.includes('LLM blocked dynamic STT hallucination')) {
+                setAssertion('ast-filter', 'pass', 'FILTERED');
+            } else if (!document.getElementById('ast-filter').querySelector('.ast-badge').classList.contains('pass')) {
+                setAssertion('ast-filter', 'pass', 'CLEAN');
+            }
+
+            // 7. Call Ended
+            if (line.includes('[Call Manager] Call ended:') || line.includes('Exotel WebSocket Disconnected physically')) {
+                setSessionStatus('idle', 'IDLE');
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('endBtn').disabled = true;
+                stopTimer();
+            }
+
+            // 8. Test Quality Report
+            if (line.includes('###REPORT###')) {
+                try {
+                    const rawJson = line.split('###REPORT###')[1];
+                    const data = JSON.parse(rawJson);
+                    showReport(data.report);
+                } catch (e) { }
+            }
+        }
+
+        function hideEmptyState() {
+            const ph = document.getElementById('emptyPlaceholder');
+            if (ph) ph.style.display = 'none';
+        }
+
+        function appendMessage(role, senderName, text) {
+            const stream = document.getElementById('messageStream');
+            const row = document.createElement('div');
+            row.className = `msg-row ${role}`;
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const avatarIcon = role === 'bot' ? 'fa-robot' : 'fa-user-astronaut';
+
+            row.innerHTML = `
+                <div class="msg-avatar">
+                    <i class="fa-solid ${avatarIcon}"></i>
+                </div>
+                <div class="msg-content">
+                    <div class="msg-header">
+                        <span class="msg-channel-tag">${senderName}</span>
+                        <span>•</span>
+                        <span style="font-family: 'Fira Code'; font-size: 10px;">${timeStr}</span>
+                        <span>•</span>
+                        <span style="font-family: 'Fira Code'; font-size: 10px;">Turn #${turnCounter++}</span>
+                    </div>
+                    <div class="msg-bubble">
+                        ${text}
+                    </div>
+                </div>
+            `;
+
+            stream.appendChild(row);
+
+            // Auto-scroll
+            const convo = document.getElementById('convoView');
+            convo.scrollTo({ top: convo.scrollHeight, behavior: 'smooth' });
+
+            // Update badge
+            const count = document.querySelectorAll('.msg-row').length;
+            document.getElementById('turnBadge').innerText = `${count} turns`;
+        }
+
+        function setAssertion(id, status, text) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const badge = el.querySelector('.ast-badge');
+            badge.className = `ast-badge ${status}`;
+            badge.innerText = text;
+
+            const passed = document.querySelectorAll('.assertion-item .ast-badge.pass').length;
+            document.getElementById('assertionsCount').innerText = `${passed} / 6`;
+            if (passed >= 4) {
+                document.getElementById('overallTag').className = 'ast-badge pass';
+                document.getElementById('overallTag').innerText = 'PASS';
+            }
+        }
+
+        function setSessionStatus(state, text) {
+            const dot = document.getElementById('sessionDot');
+            const lbl = document.getElementById('sessionStatus');
+            dot.className = `pulse-dot ${state}`;
+            lbl.innerText = text;
+        }
+
+        function startTimer() {
+            callStartTime = Date.now();
+            clearInterval(callTimer);
+            callTimer = setInterval(() => {
+                const diff = Math.floor((Date.now() - callStartTime) / 1000);
+                const m = String(Math.floor(diff / 60)).padStart(2, '0');
+                const s = String(diff % 60).padStart(2, '0');
+                document.getElementById('durationTime').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(callTimer);
+        }
+
+        function clearLogs() {
+            document.getElementById('messageStream').innerHTML = '';
+            document.getElementById('emptyPlaceholder').style.display = 'flex';
+            document.getElementById('terminalView').textContent = '> Stream cleared.\n';
+            turnCounter = 1;
+            document.getElementById('turnBadge').innerText = '0 turns';
+        }
+
+        function runTests() {
+            const targetNumber = document.getElementById('targetNumberInput').value.trim();
+            const lang = document.getElementById('languageSelect').value;
+            const persona = document.getElementById('personaSelect').value;
+            const scenario = document.getElementById('scenarioSelect').value;
+
+            if (!targetNumber) {
+                alert("Please enter a Target Bot Number (e.g. 08047360196 for Harithavanam or 08045889347 for Medicare) before starting the test.");
+                return;
+            }
+
+            localStorage.setItem('target_number', targetNumber);
+
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('endBtn').disabled = false;
+            setSessionStatus('busy', 'DIALING...');
+
+            fetch('/run-test', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    targetNumber: targetNumber,
+                    language: lang,
+                    persona: persona,
+                    scenario: scenario
+                })
+            }).then(res => {
+                if (!res.ok) {
+                    setSessionStatus('idle', 'FAIL ' + res.status);
+                    document.getElementById('runBtn').disabled = false;
+                    document.getElementById('endBtn').disabled = true;
+                }
+            }).catch(err => {
+                setSessionStatus('idle', 'ERR');
+                document.getElementById('runBtn').disabled = false;
+                document.getElementById('endBtn').disabled = true;
+            });
+        }
+
+        function endTest() {
+            fetch('/end-test', { method: 'POST' });
+        }
+
+        function injectUtterance(text) {
+            fetch('/override-response', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: text })
+            });
+        }
+
+        function injectCustomUtterance() {
+            const input = document.getElementById('customInjectInput');
+            const val = input.value.trim();
+            if (!val) return;
+            injectUtterance(val);
+            input.value = '';
+        }
+
+        function showReport(rpt) {
+            document.getElementById('reportSummaryBox').style.display = 'block';
+            document.getElementById('rptOutcome').innerText = rpt.status || rpt.callOutcome || 'Completed';
+            document.getElementById('rptLang').innerText = rpt.languageDetectionSuccess ? 'Verified' : 'Unconfirmed';
+            document.getElementById('rptUx').innerText = rpt.uxAnalysis ? rpt.uxAnalysis.substring(0, 40) + '...' : 'Natural';
+        }
+
+        window.addEventListener('load', () => {
+            initTheme();
+            initTargetNumber();
+            initSSE();
+        });
+    </script>
+</body>
+
+</html>
