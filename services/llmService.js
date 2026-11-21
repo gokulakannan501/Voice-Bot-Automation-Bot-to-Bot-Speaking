@@ -246,11 +246,43 @@ class LLMService {
             GOAL: Mix Kannada, English, and Hindi in the same sentence to test the bot's speech recognition and translation limits.
             Example: "English please, adre Dr. Meena appointment beku, will she be available kal dopahar?"`;
         } else {
-            // Default: Booking
-            scenarioInstructions = `TEST SCENARIO: Book Appointment.
-            GOAL: You need to book a new appointment.
-            - Your specific medical reason is: "${callState.symptom || 'general checkup'}".
-            - Behavior: Start with your required INITIAL INTRODUCTION RULE. Your end goal is to confirm a slot.`;
+            // Default: Booking at Podiatry / Foot Care Clinic (CareDesk / Foot Secure)
+            const footSymptom = callState.footSymptom || {
+                category: "heel pain",
+                summary: "Heel Pain & Morning Stiffness",
+                description: "sharp pain in my heel and arch, especially when I take my first steps in the morning",
+                woundOrInfection: "It's severe pain in my heel and arch, not an open wound or infection."
+            };
+            const footDesc = callState.symptom || footSymptom.description;
+            const footCategory = footSymptom.category || "heel pain";
+            const woundOrInfectionReply = footSymptom.woundOrInfection || `It's ${footDesc}.`;
+
+            scenarioInstructions = `TEST SCENARIO: Book Appointment at Podiatry / Foot Care Clinic (CareDesk / Foot Secure).
+            GOAL: You are a polite, cooperative patient calling to book an in-person consultation with a foot doctor / specialist for yourself.
+            
+            YOUR MEDICAL CONDITION FOR THIS CALL:
+            - Foot Problem: "${footDesc}".
+            - Problem Category: "${footCategory}".
+            
+            CRITICAL RULES FOR CLINICAL QUESTIONS:
+            1. WHEN ASKED ABOUT YOUR FOOT ISSUE OR REASON FOR VISIT:
+               - When CareDesk asks "is it a wound or an infection on the foot or some other issue?":
+                 Reply directly: "${woundOrInfectionReply}".
+               - When CareDesk asks "Could you please tell me a little more about the problem with your foot?" or "What problem are you facing?":
+                 Reply politely: "I have ${footDesc}."
+               - STRICTLY FORBIDDEN:
+                 * NEVER say "I don't have a problem with my foot".
+                 * NEVER say "It's just a general checkup".
+                 * ALWAYS state your assigned foot problem: "${footDesc}".
+            2. IF ASKED ABOUT DIABETES ("whether you have diabetes"):
+               - Reply: "${footCategory.includes('diabetic') ? 'Yes, I have type 2 diabetes.' : "No, I don't have diabetes."}".
+            3. IF ASKED ABOUT AGE OR GENDER:
+               - Age: "I am 30 years old."
+               - Gender: "I am male."
+            4. DATE & TIME SELECTION:
+               - State your preferred day and time clearly: "Tomorrow afternoon around 4 PM please."
+            5. CONFIRMATION:
+               - When the bot offers a doctor slot (e.g. with Dr. Govind Raj or Dr. Meena), confirm clearly: "Yes, that works, please confirm the appointment."`;
         }
 
         const todayDate = new Date();
@@ -583,8 +615,24 @@ CRITICAL LANGUAGE TEST RULE:
                     } else {
                         fallbackReply = "I'd like to book an appointment for myself.";
                     }
+                } else if (/name|register|full name/i.test(transcript)) {
+                    fallbackReply = "My name is Gokulakannan.";
+                } else if (/age|old/i.test(transcript)) {
+                    fallbackReply = "I am 30 years old.";
+                } else if (/gender/i.test(transcript)) {
+                    fallbackReply = "I am male.";
+                } else if (/diabet|sugar/i.test(transcript)) {
+                    const sym = callState.footSymptom;
+                    fallbackReply = sym && sym.category && sym.category.includes('diabetic') ? "Yes, I have type 2 diabetes." : "No, I don't have diabetes.";
+                } else if (/wound|infection|problem|foot|issue|reason|detail|specialist|tell me/i.test(transcript)) {
+                    const sym = callState.footSymptom;
+                    if (/wound|infection|other/i.test(transcript)) {
+                        fallbackReply = sym?.woundOrInfection || "It's severe pain in my heel and arch, not an open wound or infection.";
+                    } else {
+                        fallbackReply = sym?.description || "I have sharp pain in my heel and arch, especially when I walk in the morning.";
+                    }
                 } else if (/doctor|specialist|whom|who/i.test(transcript)) {
-                    fallbackReply = "Any available general physician or cardiologist works for me.";
+                    fallbackReply = "Any available foot specialist or doctor works for me.";
                 } else if (/date|day|when/i.test(transcript)) {
                     fallbackReply = "Tomorrow afternoon around 4 PM please.";
                 } else if (/time|slot|hour/i.test(transcript)) {

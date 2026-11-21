@@ -40,6 +40,69 @@ function applyTelephonyAcousticNoise(pcmBuffer, noiseType = 'light_static') {
     return out;
 }
 
+/**
+ * Realistic rotating foot issues for podiatry & diabetic foot care testing (CareDesk / Foot Secure)
+ * Changes on every call so each session tests a different clinical intake branch.
+ */
+const FOOT_SYMPTOMS = [
+    {
+        id: "heel_pain",
+        category: "heel pain",
+        summary: "Heel Pain & Morning Stiffness",
+        description: "I have sharp pain in my heel and arch, especially when I take my first steps in the morning.",
+        woundOrInfection: "It's severe pain in my heel and arch, not an open wound or infection."
+    },
+    {
+        id: "foot_wound",
+        category: "foot wound",
+        summary: "Non-healing Big Toe Wound",
+        description: "I have a small open wound and blister on the bottom of my right big toe that isn't healing.",
+        woundOrInfection: "It is a small wound on the bottom of my right big toe."
+    },
+    {
+        id: "toenail_infection",
+        category: "toenail infection",
+        summary: "Toenail Swelling & Infection",
+        description: "I have painful redness and swelling around my left toenail with mild discharge.",
+        woundOrInfection: "It is an infection with swelling around my left toenail."
+    },
+    {
+        id: "diabetic_neuropathy",
+        category: "diabetic neuropathy",
+        summary: "Burning Sensation & Numbness",
+        description: "I've been feeling a continuous burning sensation, tingling, and numbness in both my feet.",
+        woundOrInfection: "It's a burning sensation and numbness in both my feet, not an open wound."
+    },
+    {
+        id: "corn_callus",
+        category: "corn and callus",
+        summary: "Painful Corn on Ball of Foot",
+        description: "I have a hard, painful corn on the ball of my foot that hurts whenever I put weight on it.",
+        woundOrInfection: "It's a painful corn on the ball of my foot, not an infection."
+    },
+    {
+        id: "ankle_swelling",
+        category: "ankle swelling",
+        summary: "Ankle & Foot Tendon Swelling",
+        description: "I have persistent swelling and tenderness around my left ankle and the top of my foot.",
+        woundOrInfection: "It's swelling and joint tenderness around my ankle and foot."
+    },
+    {
+        id: "cracked_heels",
+        category: "cracked heels",
+        summary: "Deep Bleeding Cracked Heels",
+        description: "I have deep cracked heels with small cuts that hurt and bleed when I walk.",
+        woundOrInfection: "It's deep cracked heels with painful open cuts."
+    },
+    {
+        id: "diabetic_ulcer",
+        category: "diabetic ulcer",
+        summary: "Diabetic Foot Ulcer",
+        description: "I have a diabetic ulcer on the side of my foot that needs specialist wound care.",
+        woundOrInfection: "It is a diabetic sore on the side of my foot."
+    }
+];
+
 class CareDeskDirectConnector extends EventEmitter {
     constructor() {
         super();
@@ -57,6 +120,7 @@ class CareDeskDirectConnector extends EventEmitter {
         this.isAiSpeaking = false;
         this.history = [];
         this.turnCount = 0;
+        this.symptomCounter = 0;
     }
 
     /**
@@ -86,6 +150,16 @@ class CareDeskDirectConnector extends EventEmitter {
         this.history = [];
         this.turnCount = 0;
 
+        // Rotate to a different foot symptom on each call so consecutive calls test different intake branches
+        let footSymptom = null;
+        if (options.footIssue && options.footIssue !== 'AUTO') {
+            footSymptom = FOOT_SYMPTOMS.find(s => s.id === options.footIssue);
+        }
+        if (!footSymptom) {
+            footSymptom = options.footSymptom || FOOT_SYMPTOMS[this.symptomCounter % FOOT_SYMPTOMS.length];
+            this.symptomCounter++;
+        }
+
         this.currentConfig = {
             url: wsUrl,
             scenario: options.scenario || 'Booking',
@@ -93,12 +167,14 @@ class CareDeskDirectConnector extends EventEmitter {
             persona: options.persona || 'Self',
             patientName: options.patientName || 'Gokulakannan',
             preferredSlot: options.preferredSlot || 'tomorrow at 4 PM',
+            footSymptom: footSymptom,
+            symptom: footSymptom.description,
             noiseType: options.noiseType || (/ADVERSARIAL|CHAOS/i.test(options.scenario || '') ? 'light_static' : 'none'),
             maxTurns: Number(options.maxTurns) > 0 ? Number(options.maxTurns) : 30
         };
 
         this.emitLog('info', `Connecting to CareDesk Target Bot: ${wsUrl}...`);
-        this.emitLog('info', `Config: Scenario="${this.currentConfig.scenario}", Noise="${this.currentConfig.noiseType}", MaxTurns=${this.currentConfig.maxTurns}`);
+        this.emitLog('info', `Config: Scenario="${this.currentConfig.scenario}", Foot Issue="${footSymptom.summary}", Noise="${this.currentConfig.noiseType}", MaxTurns=${this.currentConfig.maxTurns}`);
 
         return new Promise((resolve, reject) => {
             try {
@@ -281,6 +357,8 @@ class CareDeskDirectConnector extends EventEmitter {
                     scenario: this.currentConfig.scenario,
                     targetLanguage: this.currentConfig.targetLanguage,
                     patientName: this.currentConfig.patientName,
+                    footSymptom: this.currentConfig.footSymptom,
+                    symptom: this.currentConfig.footSymptom?.description,
                     direction: 'outbound'
                 };
 
@@ -352,12 +430,25 @@ class CareDeskDirectConnector extends EventEmitter {
                         patientReply = "Wait, what did you just ask me? Can you repeat that in another way?";
                     }
                 } else {
-                    // Safe conversational heuristics for standard CareDesk flow
+                    // Safe conversational heuristics for standard CareDesk Foot Clinic flow
+                    const sym = this.currentConfig.footSymptom || FOOT_SYMPTOMS[0];
                     if (/english|kannada|language/i.test(lower)) {
-                        patientReply = "English please. I'd like to book an appointment with Dr. Meena.";
+                        patientReply = "English please. I'd like to book an appointment for my foot.";
                     } else if (/name|register|full name/i.test(lower)) {
                         patientReply = "My name is Gokulakannan.";
-                    } else if (/date|when|tomorrow|day/i.test(lower)) {
+                    } else if (/age|old/i.test(lower)) {
+                        patientReply = "I am 30 years old.";
+                    } else if (/gender/i.test(lower)) {
+                        patientReply = "I am male.";
+                    } else if (/diabet|sugar/i.test(lower)) {
+                        patientReply = sym.category.includes('diabetic') ? "Yes, I have type 2 diabetes." : "No, I don't have diabetes.";
+                    } else if (/wound|infection|problem|issue|foot|symptom|doctor|specialist|reason|detail|tell me/i.test(lower)) {
+                        if (/wound|infection|other/i.test(lower)) {
+                            patientReply = sym.woundOrInfection;
+                        } else {
+                            patientReply = sym.description;
+                        }
+                    } else if (/date|when|tomorrow|day|slot|time/i.test(lower)) {
                         patientReply = "Tomorrow afternoon around 4 PM please.";
                     } else if (/confirm|book|proceed/i.test(lower)) {
                         patientReply = "Yes, please confirm the appointment.";

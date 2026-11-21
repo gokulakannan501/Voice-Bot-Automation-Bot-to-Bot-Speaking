@@ -824,6 +824,25 @@
                         </div>
                     </div>
 
+                    <!-- FOOT CLINICAL ISSUE SELECTION -->
+                    <div class="form-group" id="footIssueGroup">
+                        <label for="footIssueSelect"><i class="fa-solid fa-socks"></i> Foot Clinical Problem (Rotates Every Call)</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-stethoscope input-icon"></i>
+                            <select id="footIssueSelect">
+                                <option value="AUTO" selected>🎲 Auto-Rotate (Different Issue on Every Call)</option>
+                                <option value="heel_pain">🦶 Heel Pain & Morning Stiffness (Plantar Fasciitis)</option>
+                                <option value="foot_wound">🩹 Non-healing Big Toe Wound & Blister</option>
+                                <option value="toenail_infection">🦠 Toenail Swelling & Infection</option>
+                                <option value="diabetic_neuropathy">🔥 Burning Sensation & Numbness (Neuropathy)</option>
+                                <option value="corn_callus">🪨 Painful Corn & Callus on Ball of Foot</option>
+                                <option value="ankle_swelling">🦵 Ankle & Foot Tendon Swelling</option>
+                                <option value="cracked_heels">🩸 Deep Bleeding Cracked Heels</option>
+                                <option value="diabetic_ulcer">⚠️ Diabetic Foot Ulcer</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <!-- NOISE SIMULATION PILLS -->
                     <div class="form-group">
                         <label><i class="fa-solid fa-waveform-lines"></i> Telephony Audio Noise Level</label>
@@ -1021,6 +1040,7 @@
         async function startCareDeskTest() {
             const targetUrl = document.getElementById('caredeskWsUrl').value.trim();
             const scenario = document.getElementById('scenarioSelect').value;
+            const footIssue = document.getElementById('footIssueSelect')?.value || 'AUTO';
             const noiseType = document.getElementById('noiseSelect').value;
             const maxTurns = parseInt(document.getElementById('maxTurnsSelect').value, 10) || 25;
 
@@ -1028,7 +1048,7 @@
                 const res = await fetch('/api/caredesk/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ targetUrl, options: { scenario, persona: 'Self', noiseType, maxTurns } })
+                    body: JSON.stringify({ targetUrl, options: { scenario, persona: 'Self', noiseType, maxTurns, footIssue } })
                 });
                 const data = await res.json();
                 if (!data.success) {
