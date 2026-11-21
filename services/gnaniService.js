@@ -115,4 +115,3 @@ class GnaniService {
 }
 
 module.exports = new GnaniService();
-
