@@ -448,9 +448,13 @@ class CareDeskDirectConnector extends EventEmitter {
                         } else {
                             patientReply = sym.description;
                         }
-                    } else if (/date|when|tomorrow|day|slot|time/i.test(lower)) {
-                        patientReply = "Tomorrow afternoon around 4 PM please.";
-                    } else if (/confirm|book|proceed/i.test(lower)) {
+                    } else if (/date|when|tomorrow|day|slot|time|available|prefer|which one/i.test(lower)) {
+                        if (/monday|tuesday|wednesday|thursday|friday|23|24|25|26|27|slot/i.test(lower)) {
+                            patientReply = "Monday, the 23rd of November works for me.";
+                        } else {
+                            patientReply = "Tomorrow afternoon around 4 PM please.";
+                        }
+                    } else if (/confirm|book|proceed|would you like to confirm/i.test(lower)) {
                         patientReply = "Yes, please confirm the appointment.";
                     } else if (/anything else|other/i.test(lower)) {
                         patientReply = "No, that is all. Thank you so much!";

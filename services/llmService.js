@@ -279,8 +279,11 @@ class LLMService {
             3. IF ASKED ABOUT AGE OR GENDER:
                - Age: "I am 30 years old."
                - Gender: "I am male."
-            4. DATE & TIME SELECTION:
-               - State your preferred day and time clearly: "Tomorrow afternoon around 4 PM please."
+            4. DATE & TIME SELECTION & NEGOTIATION (FLEXIBLE):
+               - State your preferred day and time clearly: "Tomorrow afternoon around 4 PM please" or a date next week.
+               - IF THE HOSPITAL BOT SAYS A DATE IS UNAVAILABLE AND OFFERS ALTERNATIVE DATES:
+                 * DO NOT stubbornly refuse or insist on the unavailable date!
+                 * BE COOPERATIVE & NEGOTIATE: Choose one of the available dates offered by the bot (e.g. "Monday, November 23rd works for me" or "Tuesday the 24th is fine").
             5. CONFIRMATION:
                - When the bot offers a doctor slot (e.g. with Dr. Govind Raj or Dr. Meena), confirm clearly: "Yes, that works, please confirm the appointment."`;
         }
@@ -453,10 +456,15 @@ BEHAVIOR RULES:
 4. AVOID REPETITION: Once the bot has explicitly acknowledged a piece of information, stop mentioning it.
 5. Do not mention that you are an AI or tester.
 6. Ask questions clearly and politely.
-7. NEGOTIATION & VERIFICATION: 
-   - You MUST ask for the specific date and time you invented at the start.
-   - If the bot offers a DIFFERENT time/date, you MUST refuse and correct the bot.
-8. If the bot fails to correct itself twice, end the call.
+7. NEGOTIATION & FLEXIBILITY (COOPERATIVE PATIENT): 
+   - You can start by asking for your preferred date or time.
+   - If the hospital bot states that your requested date is unavailable, or offers alternative available dates or time slots:
+     * DO NOT stubbornly refuse or repeat the unavailable date!
+     * DO NOT say "No, I specifically need [date]".
+     * BE COOPERATIVE & NEGOTIATE: Choose one of the available dates or times offered by the bot (e.g. "Okay, Monday, November 23rd works for me" or "Tuesday the 24th is fine").
+8. APPOINTMENT CONFIRMATION:
+   - When the bot proposes a doctor slot and asks to confirm (e.g. "The available slot with Dr. Govind Raj on Monday the 23rd is at 9:00 in the morning. Would you like to confirm?"):
+     * Confirm directly and clearly: "Yes, please confirm that appointment."
 9. CRITICAL: YOU ARE THE CALLER. You are NOT the receptionist.
 10. When asked for visit type, if choosing in-person, say exactly "In Person".
 11. CRITICAL: NEVER MENTION THE YEAR (${todayDate.getFullYear()}) IN YOUR SPEECH.
@@ -471,11 +479,11 @@ BEHAVIOR RULES:
       * If the bot asks for any additional feedback or comments, reply: "No additional comments, everything was great."
     - Only conclude with "Thank you so much, goodbye!" when the bot explicitly signals the call is ended.
 
-DATE & TIME TESTING RULES (Follow these randomly AFTER your introduction):
-When the target bot asks "When would you like to come in?" or "What date and time?", you MUST randomly pick ONE of these three behaviors for the current answer:
-  - BEHAVIOR A (Date Only): ONLY tell them the Date. Do NOT mention the time yet.
-  - BEHAVIOR B (Time Only): ONLY tell them the Time. Do NOT mention the date yet.
-  - BEHAVIOR C (Both): Tell them both the Date and Time in one sentence.
+DATE & TIME TESTING RULES:
+- When the target bot asks "When would you like to come in?" or "What date and time?", suggest your preferred date or time.
+- IF THE BOT SAYS THAT DATE IS UNAVAILABLE OR OFFERS ALTERNATIVES:
+  * Immediately accept or choose one of the available dates offered by the bot (e.g. "Monday, November 23rd works for me").
+  * Do NOT repeat your unavailable date. Be flexible and cooperative.
 
 PATIENT PROFILE (Book for this person):
 Name: ${patientName}
@@ -633,12 +641,16 @@ CRITICAL LANGUAGE TEST RULE:
                     }
                 } else if (/doctor|specialist|whom|who/i.test(transcript)) {
                     fallbackReply = "Any available foot specialist or doctor works for me.";
-                } else if (/date|day|when/i.test(transcript)) {
-                    fallbackReply = "Tomorrow afternoon around 4 PM please.";
+                } else if (/date|day|when|prefer|which one|available/i.test(transcript)) {
+                    if (/monday|tuesday|wednesday|thursday|friday|23|24|25|26|27|slot/i.test(transcript)) {
+                        fallbackReply = "Monday, the 23rd of November works for me.";
+                    } else {
+                        fallbackReply = "Tomorrow afternoon around 4 PM please.";
+                    }
                 } else if (/time|slot|hour/i.test(transcript)) {
-                    fallbackReply = "4 PM works great for me.";
-                } else if (/confirm|book|proceed/i.test(transcript)) {
-                    fallbackReply = "Yes, that works, please confirm the booking.";
+                    fallbackReply = "Morning at 9:00 AM or afternoon at 4:00 PM works great for me.";
+                } else if (/confirm|book|proceed|would you like to confirm/i.test(transcript)) {
+                    fallbackReply = "Yes, that works, please confirm the appointment.";
                 } else if (/anything else|other help/i.test(transcript)) {
                     fallbackReply = "No, that's everything, thank you!";
                 } else if (/survey|feedback|rate/i.test(transcript)) {
