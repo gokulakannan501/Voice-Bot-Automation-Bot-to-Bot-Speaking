@@ -1,5 +1,6 @@
 const axios = require('axios');
 const FormData = require('form-data');
+const { WaveFile } = require('wavefile');
 
 class SarvamService {
     constructor() {
@@ -31,7 +32,28 @@ class SarvamService {
             const formData = new FormData();
 
             // Ensure it is a true Node Buffer (since wavefile.toBuffer returns a Uint8Array)
-            const nodeBuffer = Buffer.from(audioBuffer);
+            let nodeBuffer = Buffer.from(audioBuffer);
+
+            // Guard: Sarvam STT strictly rejects audio > 30 seconds. Trim to last 24 seconds if needed.
+            try {
+                const wav = new WaveFile();
+                wav.fromBuffer(nodeBuffer);
+                const sampleRate = wav.fmt.sampleRate || 8000;
+                const numChannels = wav.fmt.numChannels || 1;
+                const bytesPerSample = (wav.fmt.bitsPerSample || 16) / 8;
+                const bytesPerSec = sampleRate * numChannels * bytesPerSample;
+                const durationSec = wav.data.samples.length / bytesPerSec;
+
+                if (durationSec > 25) {
+                    const keepBytes = Math.floor(24 * bytesPerSec);
+                    let start = wav.data.samples.length - keepBytes;
+                    if (start % 2 !== 0) start++;
+                    wav.data.samples = wav.data.samples.slice(start);
+                    nodeBuffer = Buffer.from(wav.toBuffer());
+                }
+            } catch (wErr) {
+                // If not standard WAV container, fallback to raw buffer
+            }
 
             // Mocking a filename for the buffer as Sarvam expects a file upload
             formData.append('file', nodeBuffer, { filename: 'audio.wav', contentType: 'audio/wav' });

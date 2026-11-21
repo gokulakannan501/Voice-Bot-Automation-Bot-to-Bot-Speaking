@@ -103,6 +103,53 @@ const FOOT_SYMPTOMS = [
     }
 ];
 
+/**
+ * Trims leading silence and caps duration to 24s to guarantee audio complies with Sarvam STT's strict 30s limit.
+ * @param {Buffer} pcmBuffer - Linear PCM 16-bit 8000 Hz buffer
+ * @param {number} maxDurationSec - Max duration in seconds (default 24s)
+ * @returns {Buffer} Sanitized buffer guaranteed to be <= 24 seconds
+ */
+function sanitizePcmForSTT(pcmBuffer, maxDurationSec = 24) {
+    if (!pcmBuffer || pcmBuffer.length < 3200) return pcmBuffer;
+
+    let aligned = pcmBuffer;
+    if (aligned.length % 2 !== 0) aligned = aligned.slice(0, aligned.length - 1);
+
+    const maxBytes = maxDurationSec * 16000; // 16,000 bytes/sec at 8000 Hz 16-bit mono
+
+    // 1. If buffer exceeds maxBytes, slice to the MOST RECENT maxBytes (where the question is)
+    if (aligned.length > maxBytes) {
+        let startOffset = aligned.length - maxBytes;
+        if (startOffset % 2 !== 0) startOffset++;
+        aligned = aligned.slice(startOffset);
+    }
+
+    // 2. Trim leading dead air/silence (RMS < 180) to maximize active speech
+    const numSamples = aligned.length / 2;
+    const chunkSize = 160; // 20ms chunks (160 samples)
+    let speechStartSample = 0;
+
+    for (let i = 0; i < numSamples - chunkSize; i += chunkSize) {
+        let sumSquares = 0;
+        for (let j = 0; j < chunkSize; j++) {
+            const val = aligned.readInt16LE((i + j) * 2);
+            sumSquares += val * val;
+        }
+        const rms = Math.sqrt(sumSquares / chunkSize);
+        if (rms > 180) {
+            speechStartSample = Math.max(0, i - 1600); // 200ms lead-in buffer
+            break;
+        }
+    }
+
+    if (speechStartSample > 0) {
+        const startByte = speechStartSample * 2;
+        aligned = aligned.slice(startByte);
+    }
+
+    return aligned;
+}
+
 class CareDeskDirectConnector extends EventEmitter {
     constructor() {
         super();
@@ -306,11 +353,10 @@ class CareDeskDirectConnector extends EventEmitter {
         if (this.status !== 'active') return;
 
         try {
-            // 1. Transcribe with Sarvam STT
+            // 1. Sanitize PCM: trim leading dead air and enforce 24s max duration to prevent Sarvam 30s limit error
+            const sanitizedPcm = sanitizePcmForSTT(audioBuffer, 24);
             const wav = new WaveFile();
-            let aligned = audioBuffer;
-            if (aligned.length % 2 !== 0) aligned = aligned.slice(0, aligned.length - 1);
-            const int16 = new Int16Array(aligned.buffer, aligned.byteOffset, aligned.length / 2);
+            const int16 = new Int16Array(sanitizedPcm.buffer, sanitizedPcm.byteOffset, sanitizedPcm.length / 2);
             wav.fromScratch(1, 8000, '16', int16);
 
             const sttResult = await sarvamService.streamToText(wav.toBuffer(), this.currentConfig.targetLanguage);
@@ -454,7 +500,7 @@ class CareDeskDirectConnector extends EventEmitter {
                         } else {
                             patientReply = "Tomorrow afternoon around 4 PM please.";
                         }
-                    } else if (/confirm|book|proceed|would you like to confirm/i.test(lower)) {
+                    } else if (/confirm|book|proceed|would you like to confirm|shall i confirm|confirm these details/i.test(lower)) {
                         patientReply = "Yes, please confirm the appointment.";
                     } else if (/anything else|other/i.test(lower)) {
                         patientReply = "No, that is all. Thank you so much!";
