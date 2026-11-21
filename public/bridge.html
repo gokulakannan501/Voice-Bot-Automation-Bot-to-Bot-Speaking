@@ -798,7 +798,17 @@
                 <!-- CAREDESK CONFIG -->
                 <div id="caredeskPanel" style="display: flex; flex-direction: column; gap: 12px;">
                     <div class="form-group">
-                        <label for="caredeskWsUrl"><i class="fa-solid fa-link"></i> Target Bot WebSocket URL</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label for="caredeskWsUrl" style="margin-bottom: 0;"><i class="fa-solid fa-link"></i> Target Bot WebSocket URL</label>
+                            <div style="display: flex; gap: 6px;">
+                                <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="document.getElementById('caredeskWsUrl').value='wss://semivolatile-marcy-unfalsified.ngrok-free.dev/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732'">
+                                    <i class="fa-solid fa-cloud"></i> Remote CareDesk
+                                </button>
+                                <button type="button" class="btn-secondary" style="padding: 2px 8px; font-size: 10px;" onclick="document.getElementById('caredeskWsUrl').value='ws://localhost:4001/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732'">
+                                    <i class="fa-solid fa-laptop-code"></i> Local (4001)
+                                </button>
+                            </div>
+                        </div>
                         <div class="input-wrap">
                             <i class="fa-solid fa-globe input-icon"></i>
                             <input type="text" id="caredeskWsUrl" value="wss://semivolatile-marcy-unfalsified.ngrok-free.dev/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732">
@@ -1062,7 +1072,13 @@
                 });
                 const data = await res.json();
                 if (!data.success) {
-                    alert('Error starting session: ' + data.error);
+                    if (data.error && data.error.includes('502')) {
+                        alert('⚠️ Target Bot Offline (502 Bad Gateway):\n\nThe ngrok tunnel exists, but the backend CareDesk bot on localhost:4000 is not running.\n\n• Please start the CareDesk server (port 4000) or\n• Use the "Local (4001)" button above to test against your local bot!');
+                    } else if (data.error && data.error.includes('ECONNREFUSED')) {
+                        alert('⚠️ Connection Refused:\n\nNo bot is listening at the target address. Please verify the port and ensure the bot is running.');
+                    } else {
+                        alert('Error starting session: ' + data.error);
+                    }
                 } else {
                     document.getElementById('emptyChatPlaceholder')?.remove();
                     startDurationTimer();
