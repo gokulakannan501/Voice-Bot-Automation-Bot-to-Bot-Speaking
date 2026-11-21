@@ -770,6 +770,11 @@
                 <span id="metricTurns" style="font-family: 'Fira Code', monospace;">0 turns</span>
             </div>
 
+            <div class="header-pill" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.12);">
+                <i class="fa-solid fa-microchip" style="color: #a5b4fc;"></i>
+                <span id="activeEngineBadge" style="color: #c7d2fe; font-weight: 700;">Gnani.ai Active</span>
+            </div>
+
             <button id="lastRecToggleBtn" class="btn-secondary" style="display: none; padding: 5px 12px; color: var(--success); border-color: rgba(16,185,129,0.35);" onclick="toggleRecordingBar()">
                 <i class="fa-solid fa-headphones"></i> Listen Recording
             </button>
@@ -822,6 +827,20 @@
                                 </optgroup>
                             </select>
                         </div>
+                    </div>
+
+                    <!-- VOICE ENGINE SELECTION -->
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-microphone-lines"></i> Speech & Voice Engine (STT / TTS)</label>
+                        <div class="pill-group">
+                            <div class="pill-option active" data-val="gnani" onclick="selectEnginePill(this, 'gnani')">
+                                <i class="fa-solid fa-bolt" style="color: #67e8f9;"></i> Gnani.ai (Timbre / Prisma)
+                            </div>
+                            <div class="pill-option" data-val="sarvam" onclick="selectEnginePill(this, 'sarvam')">
+                                <i class="fa-solid fa-language" style="color: #fca5a5;"></i> Sarvam AI (Bulbul / Saaras)
+                            </div>
+                        </div>
+                        <input type="hidden" id="voiceEngineSelect" value="gnani">
                     </div>
 
                     <!-- NOISE SIMULATION PILLS -->
@@ -969,6 +988,16 @@
             document.getElementById('bridgePanel').style.display = mode === 'bridge' ? 'flex' : 'none';
         }
 
+        function selectEnginePill(el, val) {
+            document.querySelectorAll('#caredeskPanel .pill-option[data-val="gnani"], #caredeskPanel .pill-option[data-val="sarvam"]').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('voiceEngineSelect').value = val;
+            const badge = document.getElementById('activeEngineBadge');
+            if (badge) {
+                badge.textContent = val === 'gnani' ? 'Gnani.ai Active' : 'Sarvam AI Active';
+            }
+        }
+
         function selectNoisePill(el, val) {
             document.querySelectorAll('[data-val="light_static"], [data-val="heavy_room"], [data-val="none"]').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
@@ -1023,12 +1052,13 @@
             const scenario = document.getElementById('scenarioSelect').value;
             const noiseType = document.getElementById('noiseSelect').value;
             const maxTurns = parseInt(document.getElementById('maxTurnsSelect').value, 10) || 25;
+            const voiceEngine = document.getElementById('voiceEngineSelect')?.value || 'gnani';
 
             try {
                 const res = await fetch('/api/caredesk/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ targetUrl, options: { scenario, persona: 'Self', noiseType, maxTurns } })
+                    body: JSON.stringify({ targetUrl, options: { scenario, persona: 'Self', noiseType, maxTurns, voiceEngine } })
                 });
                 const data = await res.json();
                 if (!data.success) {
@@ -1106,6 +1136,13 @@
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
                 stopDurationTimer();
+            }
+
+            if (status.voiceEngine) {
+                const badge = document.getElementById('activeEngineBadge');
+                if (badge) {
+                    badge.textContent = status.voiceEngine.toLowerCase() === 'gnani' ? 'Gnani.ai Active' : 'Sarvam AI Active';
+                }
             }
 
             if (status.lastSavedRecording) {

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { WaveFile } = require('wavefile');
 const sarvamService = require('../services/sarvamService');
+const gnaniService = require('../services/gnaniService');
 const llmService = require('../services/llmService');
 
 /**
@@ -90,6 +91,7 @@ class CareDeskDirectConnector extends EventEmitter {
             url: wsUrl,
             scenario: options.scenario || 'Booking',
             targetLanguage: options.targetLanguage || 'English',
+            voiceEngine: options.voiceEngine || process.env.VOICE_ENGINE || 'gnani',
             persona: options.persona || 'Self',
             patientName: options.patientName || 'Gokulakannan',
             preferredSlot: options.preferredSlot || 'tomorrow at 4 PM',
@@ -98,7 +100,7 @@ class CareDeskDirectConnector extends EventEmitter {
         };
 
         this.emitLog('info', `Connecting to CareDesk Target Bot: ${wsUrl}...`);
-        this.emitLog('info', `Config: Scenario="${this.currentConfig.scenario}", Noise="${this.currentConfig.noiseType}", MaxTurns=${this.currentConfig.maxTurns}`);
+        this.emitLog('info', `Config: Scenario="${this.currentConfig.scenario}", VoiceEngine="${this.currentConfig.voiceEngine}", Noise="${this.currentConfig.noiseType}", MaxTurns=${this.currentConfig.maxTurns}`);
 
         return new Promise((resolve, reject) => {
             try {
@@ -230,14 +232,28 @@ class CareDeskDirectConnector extends EventEmitter {
         if (this.status !== 'active') return;
 
         try {
-            // 1. Transcribe with Sarvam STT
+            // 1. Transcribe with Active Voice Engine (Gnani Prisma v3 or Sarvam Saaras v3)
             const wav = new WaveFile();
             let aligned = audioBuffer;
             if (aligned.length % 2 !== 0) aligned = aligned.slice(0, aligned.length - 1);
             const int16 = new Int16Array(aligned.buffer, aligned.byteOffset, aligned.length / 2);
             wav.fromScratch(1, 8000, '16', int16);
 
-            const sttResult = await sarvamService.streamToText(wav.toBuffer(), this.currentConfig.targetLanguage);
+            const activeEngine = (this.currentConfig.voiceEngine || 'gnani').toLowerCase();
+            let sttResult = { text: '', languageCode: 'en-IN' };
+
+            if (activeEngine === 'gnani') {
+                this.emitLog('info', `Transcribing CareDesk voice via Gnani STT (Prisma v3.0)...`);
+                sttResult = await gnaniService.streamToText(wav.toBuffer(), this.currentConfig.targetLanguage);
+                if (!sttResult.text && sarvamService.apiKey) {
+                    this.emitLog('warn', `Gnani STT returned empty transcript. Falling back to Sarvam STT...`);
+                    sttResult = await sarvamService.streamToText(wav.toBuffer(), this.currentConfig.targetLanguage);
+                }
+            } else {
+                this.emitLog('info', `Transcribing CareDesk voice via Sarvam STT (Saaras v3)...`);
+                sttResult = await sarvamService.streamToText(wav.toBuffer(), this.currentConfig.targetLanguage);
+            }
+
             const careDeskText = sttResult.text?.trim() || "";
 
             if (!careDeskText || careDeskText.length < 2) {
@@ -381,11 +397,22 @@ class CareDeskDirectConnector extends EventEmitter {
                 timestamp: new Date().toLocaleTimeString()
             });
 
-            // 3. Synthesize Patient Voice via Sarvam TTS
+            // 3. Synthesize Patient Voice via Active Voice Engine (Gnani Timbre v3 or Sarvam Bulbul v3)
             this.isAiSpeaking = true;
-            this.emitLog('info', `Synthesizing patient voice via Sarvam TTS...`);
+            let ttsWavBytes = Buffer.from([]);
 
-            const ttsWavBytes = await sarvamService.textToStream(patientReply, this.currentConfig.targetLanguage, 'aditya');
+            if (activeEngine === 'gnani') {
+                this.emitLog('info', `Synthesizing patient voice via Gnani TTS (Timbre v3.0, Voice: Shivani)...`);
+                ttsWavBytes = await gnaniService.textToStream(patientReply, this.currentConfig.targetLanguage, 'Shivani');
+                if ((!ttsWavBytes || ttsWavBytes.length === 0) && sarvamService.apiKey) {
+                    this.emitLog('warn', `Gnani TTS failed. Falling back to Sarvam TTS...`);
+                    ttsWavBytes = await sarvamService.textToStream(patientReply, this.currentConfig.targetLanguage, 'aditya');
+                }
+            } else {
+                this.emitLog('info', `Synthesizing patient voice via Sarvam TTS (Bulbul v3, Speaker: aditya)...`);
+                ttsWavBytes = await sarvamService.textToStream(patientReply, this.currentConfig.targetLanguage, 'aditya');
+            }
+
             const ttsWav = new WaveFile();
             ttsWav.fromBuffer(ttsWavBytes);
             if (ttsWav.fmt.sampleRate !== 8000) ttsWav.toSampleRate(8000);
@@ -510,6 +537,7 @@ class CareDeskDirectConnector extends EventEmitter {
             status: this.status,
             callSid: this.callSid,
             config: this.currentConfig,
+            voiceEngine: this.currentConfig?.voiceEngine || process.env.VOICE_ENGINE || 'gnani',
             isConnected: this.ws ? this.ws.readyState === WebSocket.OPEN : false,
             history: this.history,
             turnCount: this.turnCount,
