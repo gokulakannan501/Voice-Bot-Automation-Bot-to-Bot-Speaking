@@ -783,7 +783,10 @@
             <div class="card" style="flex-shrink: 0;">
                 <div class="segmented-tabs">
                     <button id="tabCareDesk" class="tab-btn active" onclick="switchMode('caredesk')">
-                        <i class="fa-solid fa-hospital-user"></i> CareDesk Direct Voice
+                        <i class="fa-solid fa-hospital-user"></i> CareDesk Direct
+                    </button>
+                    <button id="tabQA" class="tab-btn" onclick="switchMode('qa')">
+                        <i class="fa-solid fa-vial-circle-check"></i> QA Suite (501 Tests)
                     </button>
                     <button id="tabBridge" class="tab-btn" onclick="switchMode('bridge')">
                         <i class="fa-solid fa-arrows-split-up-and-left"></i> Dual-WS Bridge
@@ -793,10 +796,26 @@
                 <!-- CAREDESK CONFIG -->
                 <div id="caredeskPanel" style="display: flex; flex-direction: column; gap: 12px;">
                     <div class="form-group">
-                        <label for="caredeskWsUrl"><i class="fa-solid fa-link"></i> Target Bot WebSocket URL</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <label for="caredeskWsUrl" style="margin-bottom: 0;"><i class="fa-solid fa-link"></i> Target Bot WebSocket URL</label>
+                            <span id="targetStatusBadge" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.7rem; padding: 2px 7px; border-radius: 9999px; font-weight: 600;">
+                                <i class="fa-solid fa-circle-check"></i> Local Ready (4001)
+                            </span>
+                        </div>
                         <div class="input-wrap">
                             <i class="fa-solid fa-globe input-icon"></i>
-                            <input type="text" id="caredeskWsUrl" value="wss://semivolatile-marcy-unfalsified.ngrok-free.dev/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732">
+                            <input type="text" id="caredeskWsUrl" value="ws://localhost:4001/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732">
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 6px;">
+                            <button type="button" class="btn-secondary" style="flex: 1; padding: 4px 6px; font-size: 0.74rem;" onclick="setTargetPreset('local')">
+                                <i class="fa-solid fa-laptop-code"></i> Local (4001)
+                            </button>
+                            <button type="button" class="btn-secondary" style="flex: 1; padding: 4px 6px; font-size: 0.74rem;" onclick="setTargetPreset('cloud')">
+                                <i class="fa-solid fa-cloud"></i> Cloud Ngrok
+                            </button>
+                            <button type="button" class="btn-secondary" style="flex: 1; padding: 4px 6px; font-size: 0.74rem;" onclick="setTargetPreset('mock')">
+                                <i class="fa-solid fa-cube"></i> Mock (5001)
+                            </button>
                         </div>
                     </div>
 
@@ -876,6 +895,75 @@
                     </div>
                 </div>
 
+                <!-- AUTOMATED QA BATCH TEST PANEL -->
+                <div id="qaPanel" style="display: none; flex-direction: column; gap: 12px;">
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-layer-group"></i> QA Scenario Category</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-filter input-icon"></i>
+                            <select id="qaCategorySelect" onchange="onQACategoryChange()">
+                                <option value="all" selected>🌟 All 501 Test Scenarios</option>
+                                <option value="acoustic_robustness">🎙️ Acoustic & Noise Robustness (70 Tests)</option>
+                                <option value="tts_pronunciation">🔊 TTS Pronunciation & Intelligibility (70 Tests)</option>
+                                <option value="silence_and_timeout">⏱️ Silence, Pause & Timeout Handling (50 Tests)</option>
+                                <option value="mid_flow_barge_in">⚡ Mid-Flow Barge-In & Redirection (55 Tests)</option>
+                                <option value="multilingual_language_switch">🌐 Multilingual Auto-Detection & Code Switching (168 Tests)</option>
+                                <option value="regional_dialects_phonetics">📍 Karnataka Regional Dialects & Phonetics (80 Tests)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-gauge-high"></i> Execution Batch Size</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-list-ol input-icon"></i>
+                            <select id="qaLimitSelect">
+                                <option value="5" selected>⚡ Quick Sample (5 Scenarios)</option>
+                                <option value="15">🧪 Sprint Batch (15 Scenarios)</option>
+                                <option value="50">🔬 Deep Category Batch (50 Scenarios)</option>
+                                <option value="0">🚀 Complete Category / Full Suite</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-server"></i> Target Bot WebSocket</label>
+                        <div class="input-wrap">
+                            <i class="fa-solid fa-link input-icon"></i>
+                            <input type="text" id="qaTargetWsUrl" value="ws://localhost:4001/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <button id="qaStartBtn" class="btn-start" style="flex: 2; padding: 10px;" onclick="startQABatchRun()">
+                            <i class="fa-solid fa-play"></i> Run Scenarios
+                        </button>
+                        <button id="qaStopBtn" class="btn-stop" style="flex: 1; padding: 10px;" onclick="stopQABatchRun()" disabled>
+                            <i class="fa-solid fa-stop"></i> Stop
+                        </button>
+                    </div>
+
+                    <!-- Test Suite Matrix Summary Pill Box -->
+                    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 0.74rem;">
+                        <div style="font-weight: 700; color: var(--text-heading); margin-bottom: 6px; display: flex; justify-content: space-between;">
+                            <span><i class="fa-solid fa-vial-virus" style="color: var(--accent-indigo);"></i> Total Suite Matrix</span>
+                            <span style="color: var(--accent-cyan); font-weight: 700;">501 Cases</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; color: var(--text-muted);">
+                            <div>🎙️ Acoustic: <strong style="color: var(--text-body);">70</strong></div>
+                            <div>🔊 TTS: <strong style="color: var(--text-body);">70</strong></div>
+                            <div>⏱️ Timeout: <strong style="color: var(--text-body);">50</strong></div>
+                            <div>⚡ Barge-In: <strong style="color: var(--text-body);">55</strong></div>
+                            <div>🌐 Multilingual: <strong style="color: var(--text-body);">168</strong></div>
+                            <div>📍 Dialects: <strong style="color: var(--text-body);">80</strong></div>
+                        </div>
+                    </div>
+
+                    <button class="btn-secondary" style="width: 100%; padding: 8px; font-size: 0.78rem;" onclick="viewPastQAReports()">
+                        <i class="fa-solid fa-folder-open"></i> View Completed QA Reports
+                    </button>
+                </div>
+
                 <!-- DUAL-WS BRIDGE CONFIG -->
                 <div id="bridgePanel" style="display: none; flex-direction: column; gap: 12px;">
                     <div class="form-group">
@@ -923,52 +1011,137 @@
             </div>
         </div>
 
-        <!-- RIGHT PANEL: CONVERSATION FEED -->
+        <!-- RIGHT PANEL: CONVERSATION FEED & QA RESULTS -->
         <div class="card feed-card">
-            <div class="card-header">
-                <div class="card-title" style="color: var(--text-heading); font-size: 13px;">
-                    <i class="fa-solid fa-comments" style="color: var(--accent-indigo);"></i>
-                    Live Telephony Conversation Feed
-                </div>
-                <button class="btn-secondary" onclick="clearChat()">
-                    <i class="fa-solid fa-broom"></i> Clear Feed
-                </button>
-            </div>
-
-            <!-- CHAT STREAM SCROLL AREA -->
-            <div id="chatContainer" class="chat-scroll">
-                <div id="emptyChatPlaceholder" class="empty-state">
-                    <i class="fa-solid fa-headset"></i>
-                    <h3>Session Idle</h3>
-                    <p>Select your scenario and click <b>Start Bot-to-Bot Call</b> to begin testing CareDesk in real-time!</p>
-                </div>
-            </div>
-
-            <!-- SLEEK DOCKED AUDIO PLAYER (POSITIONED CLEANLY AT BOTTOM) -->
-            <div id="dockedAudioBar" class="docked-audio-bar" style="display: none;">
-                <button id="audioPlayBtn" class="audio-play-btn" onclick="toggleAudioPlayback()">
-                    <i id="playIcon" class="fa-solid fa-play"></i>
-                </button>
-                
-                <div class="audio-track-info">
-                    <div class="audio-track-top">
-                        <span class="track-title"><i class="fa-solid fa-circle-check"></i> Call Recording Saved</span>
-                        <span id="audioTimerText" class="track-timer">0:00 / 0:00</span>
+            <!-- VIEW A: LIVE TELEPHONY CONVERSATION FEED -->
+            <div id="conversationFeedWrap" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+                <div class="card-header">
+                    <div class="card-title" style="color: var(--text-heading); font-size: 13px;">
+                        <i class="fa-solid fa-comments" style="color: var(--accent-indigo);"></i>
+                        Live Telephony Conversation Feed
                     </div>
-                    <div id="scrubberTrack" class="audio-scrubber-wrap" onclick="seekAudio(event)">
-                        <div id="scrubberFill" class="audio-scrubber-fill"></div>
+                    <button class="btn-secondary" onclick="clearChat()">
+                        <i class="fa-solid fa-broom"></i> Clear Feed
+                    </button>
+                </div>
+
+                <!-- CHAT STREAM SCROLL AREA -->
+                <div id="chatContainer" class="chat-scroll">
+                    <div id="emptyChatPlaceholder" class="empty-state">
+                        <i class="fa-solid fa-headset"></i>
+                        <h3>Session Idle</h3>
+                        <p>Select your scenario and click <b>Start Bot-to-Bot Call</b> to begin testing CareDesk in real-time!</p>
                     </div>
                 </div>
 
-                <a id="downloadAudioLink" class="btn-download-pill" download>
-                    <i class="fa-solid fa-download"></i> Download WAV
-                </a>
+                <!-- SLEEK DOCKED AUDIO PLAYER (POSITIONED CLEANLY AT BOTTOM) -->
+                <div id="dockedAudioBar" class="docked-audio-bar" style="display: none;">
+                    <button id="audioPlayBtn" class="audio-play-btn" onclick="toggleAudioPlayback()">
+                        <i id="playIcon" class="fa-solid fa-play"></i>
+                    </button>
+                    
+                    <div class="audio-track-info">
+                        <div class="audio-track-top">
+                            <span class="track-title"><i class="fa-solid fa-circle-check"></i> Call Recording Saved</span>
+                            <span id="audioTimerText" class="track-timer">0:00 / 0:00</span>
+                        </div>
+                        <div id="scrubberTrack" class="audio-scrubber-wrap" onclick="seekAudio(event)">
+                            <div id="scrubberFill" class="audio-scrubber-fill"></div>
+                        </div>
+                    </div>
 
-                <button class="btn-close-audio" onclick="closeAudioBar()" title="Dismiss player">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                    <a id="downloadAudioLink" class="btn-download-pill" download>
+                        <i class="fa-solid fa-download"></i> Download WAV
+                    </a>
 
-                <audio id="hiddenAudioPlayer" preload="metadata"></audio>
+                    <button class="btn-close-audio" onclick="closeAudioBar()" title="Dismiss player">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <audio id="hiddenAudioPlayer" preload="metadata"></audio>
+                </div>
+            </div>
+
+            <!-- VIEW B: AUTOMATED QA BATCH TEST RESULTS -->
+            <div id="qaResultsWrap" style="display: none; flex-direction: column; height: 100%; overflow: hidden;">
+                <div class="card-header" style="border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                    <div class="card-title" style="color: var(--text-heading); font-size: 13px;">
+                        <i class="fa-solid fa-flask-vial" style="color: var(--accent-cyan);"></i>
+                        Automated QA Suite Live Results Matrix
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn-secondary" style="font-size: 0.74rem; padding: 4px 8px;" onclick="clearQAResults()">
+                            <i class="fa-solid fa-eraser"></i> Clear Table
+                        </button>
+                        <button id="qaDownloadReportBtn" class="btn-secondary" style="font-size: 0.74rem; padding: 4px 8px; display: none;" onclick="downloadLatestQAReport()">
+                            <i class="fa-solid fa-download"></i> Download Report (.md)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- QA KPI METRIC STRIP -->
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 10px 14px; background: rgba(0,0,0,0.25); border-bottom: 1px solid var(--border);">
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Total</div>
+                        <div id="qaKpiTotal" style="font-size: 1.15rem; font-weight: 700; color: var(--text-heading);">0</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Passed</div>
+                        <div id="qaKpiPassed" style="font-size: 1.15rem; font-weight: 700; color: var(--success);">0</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Failed</div>
+                        <div id="qaKpiFailed" style="font-size: 1.15rem; font-weight: 700; color: var(--danger);">0</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Pass Rate</div>
+                        <div id="qaKpiPassRate" style="font-size: 1.15rem; font-weight: 700; color: var(--accent-cyan);">-</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Avg WER</div>
+                        <div id="qaKpiAvgWer" style="font-size: 1.15rem; font-weight: 700; color: #a78bfa;">-</div>
+                    </div>
+                    <div style="background: var(--bg-card); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                        <div style="font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase;">Avg CER</div>
+                        <div id="qaKpiAvgCer" style="font-size: 1.15rem; font-weight: 700; color: #f472b6;">-</div>
+                    </div>
+                </div>
+
+                <!-- PROGRESS BAR -->
+                <div id="qaProgressWrap" style="padding: 8px 14px; background: rgba(0,0,0,0.15); border-bottom: 1px solid var(--border); display: none;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); margin-bottom: 4px;">
+                        <span id="qaProgressLabel"><i class="fa-solid fa-spinner fa-spin"></i> Running TC_001...</span>
+                        <span id="qaProgressPercent">0%</span>
+                    </div>
+                    <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden;">
+                        <div id="qaProgressBar" style="width: 0%; height: 100%; background: var(--primary-gradient); transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- RESULTS SCROLLABLE TABLE -->
+                <div style="flex: 1; overflow-y: auto; padding: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.76rem; text-align: left;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border); color: var(--text-muted); font-size: 0.7rem; text-transform: uppercase;">
+                                <th style="padding: 8px 6px;">ID</th>
+                                <th style="padding: 8px 6px;">Category / Condition</th>
+                                <th style="padding: 8px 6px;">Input Utterance</th>
+                                <th style="padding: 8px 6px;">Actual / STT Output</th>
+                                <th style="padding: 8px 6px;">Metrics</th>
+                                <th style="padding: 8px 6px;">Audio</th>
+                                <th style="padding: 8px 6px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qaResultsTableBody">
+                            <tr id="qaEmptyPlaceholder">
+                                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                    <i class="fa-solid fa-vial" style="font-size: 2rem; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
+                                    Ready to run test scenarios. Select your category and click <b>Run Scenarios</b>.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
@@ -983,9 +1156,46 @@
         function switchMode(mode) {
             currentMode = mode;
             document.getElementById('tabCareDesk').className = 'tab-btn ' + (mode === 'caredesk' ? 'active' : '');
+            document.getElementById('tabQA').className = 'tab-btn ' + (mode === 'qa' ? 'active' : '');
             document.getElementById('tabBridge').className = 'tab-btn ' + (mode === 'bridge' ? 'active' : '');
+
             document.getElementById('caredeskPanel').style.display = mode === 'caredesk' ? 'flex' : 'none';
+            document.getElementById('qaPanel').style.display = mode === 'qa' ? 'flex' : 'none';
             document.getElementById('bridgePanel').style.display = mode === 'bridge' ? 'flex' : 'none';
+
+            // Right panel views
+            document.getElementById('conversationFeedWrap').style.display = mode === 'qa' ? 'none' : 'flex';
+            document.getElementById('qaResultsWrap').style.display = mode === 'qa' ? 'flex' : 'none';
+        }
+
+        function setTargetPreset(type) {
+            const input = document.getElementById('caredeskWsUrl');
+            const badge = document.getElementById('targetStatusBadge');
+            if (type === 'local') {
+                input.value = 'ws://localhost:4001/ws/audio?token=5afbe74c1f81c541e5232444560e488d7935bca2cce7e732';
+                if (badge) {
+                    badge.style.background = 'rgba(16, 185, 129, 0.15)';
+                    badge.style.color = '#10b981';
+                    badge.innerHTML = '<i class="fa-solid fa-circle-check"></i> Local Ready (4001)';
+                }
+            } else if (type === 'mock') {
+                input.value = 'ws://localhost:5001';
+                if (badge) {
+                    badge.style.background = 'rgba(99, 102, 241, 0.15)';
+                    badge.style.color = '#818cf8';
+                    badge.innerHTML = '<i class="fa-solid fa-cube"></i> Mock Bot (5001)';
+                }
+            } else if (type === 'cloud') {
+                const val = prompt('Enter Cloud / Ngrok Target Bot WebSocket URL:', input.value.startsWith('wss://') ? input.value : 'wss://');
+                if (val && val.trim()) {
+                    input.value = val.trim();
+                    if (badge) {
+                        badge.style.background = 'rgba(56, 189, 248, 0.15)';
+                        badge.style.color = '#38bdf8';
+                        badge.innerHTML = '<i class="fa-solid fa-cloud"></i> Cloud Custom';
+                    }
+                }
+            }
         }
 
         function selectNoisePill(el, val) {
@@ -1037,6 +1247,32 @@
                 : '<i class="fa-solid fa-cube"></i> Start Local Mock Bots (5001 & 5002)';
         });
 
+        // QA Event Listeners
+        eventSource.addEventListener('qa_start', (e) => {
+            handleQAStart(JSON.parse(e.data));
+        });
+
+        eventSource.addEventListener('qa_test_start', (e) => {
+            handleQATestStart(JSON.parse(e.data));
+        });
+
+        eventSource.addEventListener('qa_test_complete', (e) => {
+            handleQATestComplete(JSON.parse(e.data));
+        });
+
+        eventSource.addEventListener('qa_finish', (e) => {
+            handleQAFinish(JSON.parse(e.data));
+        });
+
+        eventSource.addEventListener('qa_status', (e) => {
+            const data = JSON.parse(e.data);
+            if (data && data.isRunning) {
+                document.getElementById('qaStartBtn').disabled = true;
+                document.getElementById('qaStopBtn').disabled = false;
+                document.getElementById('qaProgressWrap').style.display = 'block';
+            }
+        });
+
         async function startCareDeskTest() {
             const targetUrl = document.getElementById('caredeskWsUrl').value.trim();
             const scenario = document.getElementById('scenarioSelect').value;
@@ -1052,7 +1288,11 @@
                 });
                 const data = await res.json();
                 if (!data.success) {
-                    alert('Error starting session: ' + data.error);
+                    if (data.error && data.error.includes('502')) {
+                        alert('⚠️ Connection Failed: 502 Bad Gateway.\n\nThe remote ngrok/cloud target bot is unreachable or offline.\n\n👉 Click "Local (4001)" to connect directly to your local CareDesk bot on port 4001!');
+                    } else {
+                        alert('Error starting session: ' + data.error);
+                    }
                 } else {
                     document.getElementById('emptyChatPlaceholder')?.remove();
                     startDurationTimer();
@@ -1312,6 +1552,229 @@
 
         function clearLogs() {
             document.getElementById('logTerminal').innerHTML = '<div class="log-line log-info">[System] Logs cleared.</div>';
+        }
+
+        // ==========================================
+        // QA BATCH RUNNER SUITE JAVASCRIPT LOGIC
+        // ==========================================
+        let qaIsRunning = false;
+        let qaTotalTests = 0;
+        let qaCompletedTests = 0;
+        let qaPassedTests = 0;
+        let qaFailedTests = 0;
+        let qaWerList = [];
+        let qaCerList = [];
+        let qaLatencies = [];
+        let latestQAReportPath = null;
+
+        function onQACategoryChange() {}
+
+        async function startQABatchRun() {
+            const category = document.getElementById('qaCategorySelect').value;
+            const limit = parseInt(document.getElementById('qaLimitSelect').value, 10) || 0;
+            const targetBotUrl = document.getElementById('qaTargetWsUrl').value.trim();
+
+            document.getElementById('qaStartBtn').disabled = true;
+            document.getElementById('qaStopBtn').disabled = false;
+            document.getElementById('qaProgressWrap').style.display = 'block';
+            document.getElementById('qaEmptyPlaceholder')?.remove();
+
+            try {
+                const res = await fetch('/api/qa/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ category, limit, targetBotUrl })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert('Error starting QA Run: ' + data.error);
+                    document.getElementById('qaStartBtn').disabled = false;
+                    document.getElementById('qaStopBtn').disabled = true;
+                }
+            } catch (err) {
+                alert('Connection error: ' + err.message);
+                document.getElementById('qaStartBtn').disabled = false;
+                document.getElementById('qaStopBtn').disabled = true;
+            }
+        }
+
+        async function stopQABatchRun() {
+            try {
+                await fetch('/api/qa/stop', { method: 'POST' });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function handleQAStart(data) {
+            qaIsRunning = true;
+            qaTotalTests = data.total;
+            qaCompletedTests = 0;
+            qaPassedTests = 0;
+            qaFailedTests = 0;
+            qaWerList = [];
+            qaCerList = [];
+            qaLatencies = [];
+            latestQAReportPath = null;
+
+            document.getElementById('qaKpiTotal').textContent = qaTotalTests;
+            document.getElementById('qaKpiPassed').textContent = '0';
+            document.getElementById('qaKpiFailed').textContent = '0';
+            document.getElementById('qaKpiPassRate').textContent = '0%';
+            document.getElementById('qaKpiAvgWer').textContent = '-';
+            document.getElementById('qaKpiAvgCer').textContent = '-';
+            document.getElementById('qaDownloadReportBtn').style.display = 'none';
+
+            document.getElementById('qaProgressWrap').style.display = 'block';
+            document.getElementById('qaProgressBar').style.width = '0%';
+            document.getElementById('qaProgressPercent').textContent = '0%';
+            document.getElementById('qaProgressLabel').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Initializing suite (${data.total} scenarios)...`;
+        }
+
+        function handleQATestStart(data) {
+            document.getElementById('qaProgressLabel').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Running ${data.testNumber} (${data.index}/${data.total}) [${data.category}]...`;
+            const pct = Math.round((data.index / data.total) * 100);
+            document.getElementById('qaProgressBar').style.width = `${pct}%`;
+            document.getElementById('qaProgressPercent').textContent = `${pct}%`;
+        }
+
+        function handleQATestComplete(data) {
+            const r = data.result;
+            qaCompletedTests = data.completed;
+            qaPassedTests = data.passed;
+            qaFailedTests = data.failed;
+
+            if (r.wer !== undefined && r.wer > 0) qaWerList.push(r.wer);
+            if (r.cer !== undefined && r.cer > 0) qaCerList.push(r.cer);
+            if (r.latencyMs) qaLatencies.push(r.latencyMs);
+
+            // Update KPIs
+            document.getElementById('qaKpiTotal').textContent = data.total;
+            document.getElementById('qaKpiPassed').textContent = qaPassedTests;
+            document.getElementById('qaKpiFailed').textContent = qaFailedTests;
+            
+            const passRate = data.completed > 0 ? ((qaPassedTests / data.completed) * 100).toFixed(1) : 0;
+            document.getElementById('qaKpiPassRate').textContent = `${passRate}%`;
+
+            if (qaWerList.length > 0) {
+                const avgWer = ((qaWerList.reduce((a, b) => a + b, 0) / qaWerList.length) * 100).toFixed(1);
+                document.getElementById('qaKpiAvgWer').textContent = `${avgWer}%`;
+            }
+            if (qaCerList.length > 0) {
+                const avgCer = ((qaCerList.reduce((a, b) => a + b, 0) / qaCerList.length) * 100).toFixed(1);
+                document.getElementById('qaKpiAvgCer').textContent = `${avgCer}%`;
+            }
+
+            // Append Row to Table
+            appendQAResultRow(r);
+        }
+
+        function appendQAResultRow(r) {
+            document.getElementById('qaEmptyPlaceholder')?.remove();
+            const tbody = document.getElementById('qaResultsTableBody');
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid rgba(255, 255, 255, 0.05)';
+            tr.style.transition = 'background 0.2s';
+            tr.onmouseenter = () => tr.style.background = 'rgba(255, 255, 255, 0.02)';
+            tr.onmouseleave = () => tr.style.background = 'transparent';
+
+            const statusHtml = r.passed 
+                ? '<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.68rem;"><i class="fa-solid fa-circle-check"></i> PASS</span>'
+                : '<span style="background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 2px 7px; border-radius: 4px; font-weight: 700; font-size: 0.68rem;"><i class="fa-solid fa-circle-xmark"></i> FAIL</span>';
+
+            const metricsHtml = r.wer !== undefined 
+                ? `<div style="font-size: 0.7rem; color: var(--text-muted);">WER: <b style="color: #a78bfa;">${(r.wer*100).toFixed(0)}%</b> | CER: <b style="color: #f472b6;">${(r.cer*100).toFixed(0)}%</b></div><div style="font-size: 0.65rem; color: var(--text-faint);">${r.latencyMs}ms</div>`
+                : `<span style="color: var(--text-muted); font-size: 0.7rem;">${r.latencyMs}ms</span>`;
+
+            const audioHtml = r.audioFile 
+                ? `<button class="btn-secondary" style="padding: 2px 6px; font-size: 0.68rem;" onclick="playQAAudio('${r.audioFile}')"><i class="fa-solid fa-play"></i></button>`
+                : `<span style="color: var(--text-faint);">-</span>`;
+
+            tr.innerHTML = `
+                <td style="padding: 8px 6px; font-family: 'Fira Code', monospace; color: var(--accent-cyan); font-weight: 600;">${r.testNumber}</td>
+                <td style="padding: 8px 6px;">
+                    <div style="font-weight: 600; color: var(--text-heading);">${r.category}</div>
+                    <div style="font-size: 0.68rem; color: var(--text-muted);">${r.condition || '-'}</div>
+                </td>
+                <td style="padding: 8px 6px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.inputUtterance || ''}">
+                    ${r.inputUtterance || '-'}
+                </td>
+                <td style="padding: 8px 6px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.actualOutput || ''}">
+                    ${r.actualOutput || '-'}
+                </td>
+                <td style="padding: 8px 6px;">${metricsHtml}</td>
+                <td style="padding: 8px 6px; text-align: center;">${audioHtml}</td>
+                <td style="padding: 8px 6px;">${statusHtml}</td>
+            `;
+
+            tbody.prepend(tr);
+        }
+
+        function playQAAudio(url) {
+            const player = document.getElementById('hiddenAudioPlayer');
+            player.src = url;
+            player.play().catch(e => console.error(e));
+        }
+
+        function handleQAFinish(data) {
+            qaIsRunning = false;
+            document.getElementById('qaStartBtn').disabled = false;
+            document.getElementById('qaStopBtn').disabled = true;
+            document.getElementById('qaProgressLabel').innerHTML = `<i class="fa-solid fa-circle-check" style="color: var(--success);"></i> Batch Complete! (${data.summary.totalTests} Scenarios)`;
+            document.getElementById('qaProgressBar').style.width = '100%';
+            document.getElementById('qaProgressPercent').textContent = '100%';
+
+            latestQAReportPath = `/reports/${data.summary.runId}.md`;
+            const downloadBtn = document.getElementById('qaDownloadReportBtn');
+            downloadBtn.style.display = 'inline-flex';
+            downloadBtn.setAttribute('data-url', latestQAReportPath);
+            downloadBtn.setAttribute('data-id', data.summary.runId);
+        }
+
+        function downloadLatestQAReport() {
+            const btn = document.getElementById('qaDownloadReportBtn');
+            const url = btn.getAttribute('data-url');
+            if (url) {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `QA_Report_${Date.now()}.md`;
+                a.click();
+            }
+        }
+
+        function clearQAResults() {
+            document.getElementById('qaResultsTableBody').innerHTML = `
+                <tr id="qaEmptyPlaceholder">
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-vial" style="font-size: 2rem; opacity: 0.3; margin-bottom: 8px; display: block;"></i>
+                        Ready to run test scenarios. Select your category and click <b>Run Scenarios</b>.
+                    </td>
+                </tr>
+            `;
+            document.getElementById('qaKpiTotal').textContent = '0';
+            document.getElementById('qaKpiPassed').textContent = '0';
+            document.getElementById('qaKpiFailed').textContent = '0';
+            document.getElementById('qaKpiPassRate').textContent = '-';
+            document.getElementById('qaKpiAvgWer').textContent = '-';
+            document.getElementById('qaKpiAvgCer').textContent = '-';
+            document.getElementById('qaProgressWrap').style.display = 'none';
+        }
+
+        async function viewPastQAReports() {
+            try {
+                const res = await fetch('/api/qa/reports');
+                const data = await res.json();
+                if (data.reports && data.reports.length > 0) {
+                    const list = data.reports.map((r, idx) => 
+                        `${idx + 1}. ${r.id} | Passed: ${r.summary.passed}/${r.summary.totalTests} (${r.summary.passRate}) | WER: ${r.summary.avgWer}`
+                    ).join('\n');
+                    alert(`📋 Available QA Test Reports:\n\n${list}\n\nReports are saved in /reports folder.`);
+                } else {
+                    alert('No past QA reports found yet. Run a scenario batch first!');
+                }
+            } catch (e) {
+                alert('Error fetching reports: ' + e.message);
+            }
         }
 
         // Initial fetch of recent recordings

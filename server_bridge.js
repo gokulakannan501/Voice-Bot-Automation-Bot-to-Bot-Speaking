@@ -5,6 +5,7 @@ const fs = require('fs');
 const botBridge = require('./bridge/botBridge');
 const mockBots = require('./bridge/mockBots');
 const caredeskConnector = require('./bridge/caredeskDirectConnector');
+const qaBatchRunner = require('./engine/qaBatchRunner');
 
 const app = express();
 const PORT = process.env.BRIDGE_PORT || 4002;
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 
 app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 app.use('/recordings', express.static(path.join(__dirname, 'recordings')));
+app.use('/reports', express.static(path.join(__dirname, 'reports')));
 
 // SSE Clients for real-time UI streaming
 const sseClients = new Set();
@@ -89,6 +91,13 @@ caredeskConnector.on('status_change', (status) => broadcastSSE('caredesk_status'
 caredeskConnector.on('completed', (result) => broadcastSSE('completed', result));
 caredeskConnector.on('recording_saved', (rec) => broadcastSSE('recording_saved', rec));
 
+// Subscribe to QA Batch Runner Events
+qaBatchRunner.on('start', (data) => broadcastSSE('qa_start', data));
+qaBatchRunner.on('test_start', (data) => broadcastSSE('qa_test_start', data));
+qaBatchRunner.on('test_complete', (data) => broadcastSSE('qa_test_complete', data));
+qaBatchRunner.on('finish', (data) => broadcastSSE('qa_finish', data));
+qaBatchRunner.on('log', (data) => broadcastSSE('log', data));
+
 // SSE Endpoint
 app.get('/api/bridge/events', (req, res) => {
     res.writeHead(200, {
@@ -103,6 +112,7 @@ app.get('/api/bridge/events', (req, res) => {
     res.write(`event: status\ndata: ${JSON.stringify(botBridge.getStatus())}\n\n`);
     res.write(`event: mock_status\ndata: ${JSON.stringify({ isRunning: mockBots.isRunning })}\n\n`);
     res.write(`event: caredesk_status\ndata: ${JSON.stringify(caredeskConnector.getStatus())}\n\n`);
+    res.write(`event: qa_status\ndata: ${JSON.stringify(qaBatchRunner.getStatus())}\n\n`);
 
     sseClients.add(res);
 
@@ -158,6 +168,95 @@ app.get('/api/recordings', (req, res) => {
             })
             .sort((a, b) => b.createdAt - a.createdAt);
         res.json({ recordings: files });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// ==========================================
+// QA BATCH RUNNER AUTOMATED SUITE ENDPOINTS
+// ==========================================
+app.get('/api/qa/scenarios', (req, res) => {
+    try {
+        const dataset = qaBatchRunner.getDataset();
+        res.json({
+            metadata: dataset.metadata,
+            categories: dataset.metadata.categories,
+            tests: dataset.tests
+        });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/qa/run', async (req, res) => {
+    try {
+        const { category, ids, limit, targetBotUrl } = req.body;
+        // Background execution so HTTP returns immediately
+        qaBatchRunner.run({ category, ids, limit, targetBotUrl }).catch(err => {
+            console.error('[QA Runner Error]:', err.message);
+        });
+        res.json({ success: true, message: 'QA Batch run initiated', status: qaBatchRunner.getStatus() });
+    } catch (err) {
+        res.status(400).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/qa/stop', (req, res) => {
+    try {
+        qaBatchRunner.stop();
+        res.json({ success: true, message: 'QA run stop requested' });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/qa/status', (req, res) => {
+    res.json(qaBatchRunner.getStatus());
+});
+
+app.get('/api/qa/reports', (req, res) => {
+    try {
+        const dir = path.join(__dirname, 'reports');
+        if (!fs.existsSync(dir)) return res.json({ reports: [] });
+        const files = fs.readdirSync(dir)
+            .filter(f => f.endsWith('.json'))
+            .map(f => {
+                const fullPath = path.join(dir, f);
+                const stat = fs.statSync(fullPath);
+                try {
+                    const content = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+                    return {
+                        id: f.replace('.json', ''),
+                        summary: content.summary,
+                        createdAt: stat.birthtime,
+                        jsonUrl: `/reports/${f}`,
+                        mdUrl: `/reports/${f.replace('.json', '.md')}`
+                    };
+                } catch {
+                    return null;
+                }
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.createdAt - a.createdAt);
+        res.json({ reports: files });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.get('/api/qa/report/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        const jsonPath = path.join(__dirname, 'reports', `${id}.json`);
+        const mdPath = path.join(__dirname, 'reports', `${id}.md`);
+        if (fs.existsSync(jsonPath)) {
+            const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+            const md = fs.existsSync(mdPath) ? fs.readFileSync(mdPath, 'utf8') : '';
+            res.json({ success: true, data, markdown: md });
+        } else {
+            res.status(404).json({ error: 'Report not found' });
+        }
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
